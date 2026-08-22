@@ -15,7 +15,7 @@
  */
 export function createUIResource(
   uri: string,
-  htmlContent: string
+  htmlContent: string,
 ): {
   type: 'resource';
   resource: {
@@ -49,7 +49,7 @@ export function createDevicePickerUI(
     type?: string;
   }>,
   platform: 'android' | 'ios',
-  deviceType?: 'simulator' | 'real'
+  deviceType?: 'simulator' | 'real',
 ): string {
   const deviceTypeLabel =
     platform === 'ios' && deviceType
@@ -59,23 +59,29 @@ export function createDevicePickerUI(
       : 'Android Devices';
 
   const deviceCards = devices
-    .map(
-      (device, index) => `
-    <div class="device-card" data-udid="${device.udid}" data-index="${index}">
+    .map((device, index) => {
+      const udid = String(device.udid);
+      const name = device.name || udid;
+      const state = device.state ? String(device.state) : undefined;
+      const type = device.type ? String(device.type) : undefined;
+      const stateClass = state ? sanitizeClassName(state) : '';
+
+      return `
+    <div class="device-card" data-udid="${escapeHtml(udid)}" data-index="${index}">
       <div class="device-header">
-        <h3>${device.name || device.udid}</h3>
-        ${device.state ? `<span class="device-state ${device.state.toLowerCase()}">${device.state}</span>` : ''}
+        <h3>${escapeHtml(name)}</h3>
+        ${state ? `<span class="device-state ${stateClass}">${escapeHtml(state)}</span>` : ''}
       </div>
       <div class="device-details">
-        <p><strong>UDID:</strong> <code>${device.udid}</code></p>
-        ${device.type ? `<p><strong>Type:</strong> ${device.type}</p>` : ''}
+        <p><strong>UDID:</strong> <code>${escapeHtml(udid)}</code></p>
+        ${type ? `<p><strong>Type:</strong> ${escapeHtml(type)}</p>` : ''}
       </div>
-      <button class="select-device-btn" onclick="selectDevice('${device.udid}')">
+      <button class="select-device-btn" data-udid="${escapeHtml(udid)}" onclick="selectDevice(this.dataset.udid)">
         Select Device
       </button>
     </div>
-  `
-    )
+  `;
+    })
     .join('');
 
   return `
@@ -215,8 +221,8 @@ export function createDevicePickerUI(
         payload: {
           intent: 'select-device',
           params: {
-            platform: '${platform}',
-            ${deviceType ? `deviceType: '${deviceType}',` : ''}
+            platform: ${escapeScriptValue(platform)},
+            ${deviceType ? `iosDeviceType: ${escapeScriptValue(deviceType)},` : ''}
             deviceUdid: udid
           }
         }
@@ -243,10 +249,9 @@ export function createDevicePickerUI(
  * @param filepath - Path where screenshot was saved
  * @returns HTML string for screenshot viewer
  */
-export function createScreenshotViewerUI(
-  screenshotBase64: string,
-  filepath: string
-): string {
+export function createScreenshotViewerUI(screenshotBase64: string, filepath: string): string {
+  const downloadFilename = filepath.split('/').pop() || 'screenshot.png';
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -370,7 +375,7 @@ export function createScreenshotViewerUI(
     <div class="toolbar">
       <div class="toolbar-left">
         <span style="font-size: 14px; font-weight: 500;">📸 Screenshot</span>
-        <span class="filepath">${filepath}</span>
+        <span class="filepath">${escapeHtml(filepath)}</span>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-secondary" onclick="downloadScreenshot()">Download</button>
@@ -378,7 +383,7 @@ export function createScreenshotViewerUI(
       </div>
     </div>
     <div class="image-container" id="imageContainer">
-      <img src="data:image/png;base64,${screenshotBase64}"
+      <img src="data:image/png;base64,${escapeHtml(screenshotBase64)}"
            alt="Screenshot"
            class="screenshot-img"
            id="screenshotImg"
@@ -420,7 +425,7 @@ export function createScreenshotViewerUI(
     function downloadScreenshot() {
       const link = document.createElement('a');
       link.href = img.src;
-      link.download = '${filepath.split('/').pop() || 'screenshot.png'}';
+      link.download = ${escapeScriptValue(downloadFilename)};
       link.click();
     }
 
@@ -461,15 +466,13 @@ export function createSessionDashboardUI(sessionInfo: {
 }): string {
   // Safely convert sessionId to string
   const sessionIdStr =
-    typeof sessionInfo.sessionId === 'string'
-      ? sessionInfo.sessionId
-      : String(sessionInfo.sessionId || 'Unknown');
+    typeof sessionInfo.sessionId === 'string' ? sessionInfo.sessionId : String(sessionInfo.sessionId || 'Unknown');
 
   // Get first 8 characters for display, or full string if shorter
-  const sessionIdDisplay =
-    sessionIdStr.length > 8
-      ? `${sessionIdStr.substring(0, 8)}...`
-      : sessionIdStr;
+  const sessionIdDisplay = sessionIdStr.length > 8 ? `${sessionIdStr.substring(0, 8)}...` : sessionIdStr;
+  const deviceName = sessionInfo.deviceName;
+  const platformVersion = sessionInfo.platformVersion;
+  const udid = sessionInfo.udid;
 
   return `
 <!DOCTYPE html>
@@ -590,42 +593,42 @@ export function createSessionDashboardUI(sessionInfo: {
       <div class="info-grid">
         <div class="info-card">
           <label>Session ID</label>
-          <value>${sessionIdDisplay}</value>
+          <value>${escapeHtml(sessionIdDisplay)}</value>
         </div>
         <div class="info-card">
           <label>Platform</label>
-          <value>${sessionInfo.platform}</value>
+          <value>${escapeHtml(sessionInfo.platform)}</value>
         </div>
         <div class="info-card">
           <label>Automation</label>
-          <value>${sessionInfo.automationName}</value>
+          <value>${escapeHtml(sessionInfo.automationName)}</value>
         </div>
         ${
-          sessionInfo.deviceName
+          deviceName
             ? `
         <div class="info-card">
           <label>Device</label>
-          <value>${sessionInfo.deviceName}</value>
+          <value>${escapeHtml(deviceName)}</value>
         </div>
         `
             : ''
         }
         ${
-          sessionInfo.platformVersion
+          platformVersion
             ? `
         <div class="info-card">
           <label>Platform Version</label>
-          <value>${sessionInfo.platformVersion}</value>
+          <value>${escapeHtml(platformVersion)}</value>
         </div>
         `
             : ''
         }
         ${
-          sessionInfo.udid
+          udid
             ? `
         <div class="info-card">
           <label>UDID</label>
-          <value><code style="font-size: 12px;">${sessionInfo.udid}</code></value>
+          <value><code style="font-size: 12px;">${escapeHtml(udid)}</code></value>
         </div>
         `
             : ''
@@ -675,8 +678,8 @@ export function createSessionDashboardUI(sessionInfo: {
       window.parent.postMessage({
         type: 'tool',
         payload: {
-          toolName: 'appium_get_contexts',
-          params: {}
+          toolName: 'appium_context',
+          params: { action: 'list' }
         }
       }, '*');
     }
@@ -713,38 +716,38 @@ export function createLocatorGeneratorUI(
     clickable: boolean;
     enabled: boolean;
     displayed: boolean;
-  }>
+  }>,
 ): string {
   const locatorCards = locators
     .map(
       (element, index) => `
     <div class="locator-card" data-index="${index}">
       <div class="locator-header">
-        <h3>${element.tagName}</h3>
+        <h3>${escapeHtml(element.tagName)}</h3>
         <div class="badges">
           ${element.clickable ? '<span class="badge badge-clickable">Clickable</span>' : ''}
           ${element.enabled ? '<span class="badge badge-enabled">Enabled</span>' : ''}
           ${element.displayed ? '<span class="badge badge-displayed">Displayed</span>' : ''}
         </div>
       </div>
-      ${element.text ? `<p class="element-text"><strong>Text:</strong> ${element.text}</p>` : ''}
-      ${element.contentDesc ? `<p class="element-text"><strong>Content Desc:</strong> ${element.contentDesc}</p>` : ''}
-      ${element.resourceId ? `<p class="element-text"><strong>Resource ID:</strong> <code>${element.resourceId}</code></p>` : ''}
+      ${element.text ? `<p class="element-text"><strong>Text:</strong> ${escapeHtml(element.text)}</p>` : ''}
+      ${element.contentDesc ? `<p class="element-text"><strong>Content Desc:</strong> ${escapeHtml(element.contentDesc)}</p>` : ''}
+      ${element.resourceId ? `<p class="element-text"><strong>Resource ID:</strong> <code>${escapeHtml(element.resourceId)}</code></p>` : ''}
       <div class="locators-list">
         ${Object.entries(element.locators)
           .map(
             ([strategy, selector]) => `
           <div class="locator-item">
-            <span class="strategy">${strategy}</span>
-            <code class="selector">${selector}</code>
-            <button class="test-btn" onclick="testLocator('${strategy}', \`${selector.replace(/`/g, '\\`')}\`)">Test</button>
+            <span class="strategy">${escapeHtml(strategy)}</span>
+            <code class="selector">${escapeHtml(selector)}</code>
+            <button class="test-btn" data-strategy="${escapeHtml(strategy)}" data-selector="${escapeHtml(selector)}">Test</button>
           </div>
-        `
+        `,
           )
           .join('')}
       </div>
     </div>
-  `
+  `,
     )
     .join('');
 
@@ -895,6 +898,16 @@ export function createLocatorGeneratorUI(
         }
       }, '*');
     }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const button = target instanceof Element ? target.closest('.test-btn') : null;
+      if (!button) {
+        return;
+      }
+
+      testLocator(button.dataset.strategy || '', button.dataset.selector || '');
+    });
   </script>
 </body>
 </html>
@@ -907,13 +920,7 @@ export function createLocatorGeneratorUI(
  * @returns HTML string for page source inspector
  */
 export function createPageSourceInspectorUI(pageSource: string): string {
-  // Escape HTML for safe display
-  const escapedSource = pageSource
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  const escapedSource = escapeHtml(pageSource);
 
   return `
 <!DOCTYPE html>
@@ -1058,19 +1065,50 @@ export function createPageSourceInspectorUI(pageSource: string): string {
       }, '*');
     }
 
+    const xmlContent = document.getElementById('xmlContent');
+    const originalSource = xmlContent.textContent;
+
+    function appendTextWithHighlights(container, text, searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const textLower = text.toLowerCase();
+      let position = 0;
+
+      while (position < text.length) {
+        const matchIndex = textLower.indexOf(searchLower, position);
+        if (matchIndex === -1) {
+          container.appendChild(document.createTextNode(text.slice(position)));
+          return;
+        }
+
+        if (matchIndex > position) {
+          container.appendChild(
+            document.createTextNode(text.slice(position, matchIndex))
+          );
+        }
+
+        const mark = document.createElement('mark');
+        mark.style.background = '#ffd700';
+        mark.style.color = '#000';
+        mark.textContent = text.slice(matchIndex, matchIndex + searchTerm.length);
+        container.appendChild(mark);
+        position = matchIndex + searchTerm.length;
+      }
+    }
+
+    function renderSource(searchTerm = '') {
+      xmlContent.textContent = '';
+      if (!searchTerm) {
+        xmlContent.textContent = originalSource;
+        return;
+      }
+
+      appendTextWithHighlights(xmlContent, originalSource, searchTerm);
+    }
+
     // Search functionality
     document.getElementById('searchBox').addEventListener('input', (e) => {
       const searchTerm = e.target.value.toLowerCase();
-      const content = document.getElementById('xmlContent');
-      if (!searchTerm) {
-        content.innerHTML = \`${escapedSource}\`;
-        return;
-      }
-      const highlighted = content.textContent.replace(
-        new RegExp(\`(\${searchTerm})\`, 'gi'),
-        '<mark style="background: #ffd700; color: #000;">$1</mark>'
-      );
-      content.innerHTML = highlighted;
+      renderSource(searchTerm);
     });
   </script>
 </body>
@@ -1084,27 +1122,24 @@ export function createPageSourceInspectorUI(pageSource: string): string {
  * @param currentContext - Currently active context name
  * @returns HTML string for context switcher
  */
-export function createContextSwitcherUI(
-  contexts: string[],
-  currentContext: string | null
-): string {
+export function createContextSwitcherUI(contexts: string[], currentContext: string | null): string {
   const contextCards = contexts
     .map(
       (context) => `
     <div class="context-card ${context === currentContext ? 'active' : ''}"
-         onclick="switchContext('${context}')">
+         data-context="${escapeHtml(context)}">
       <div class="context-header">
-        <h3>${context}</h3>
+        <h3>${escapeHtml(context)}</h3>
         ${context === currentContext ? '<span class="badge-active">Active</span>' : ''}
       </div>
       <div class="context-type">
         ${context === 'NATIVE_APP' ? '📱 Native App' : '🌐 WebView'}
       </div>
-      <button class="switch-btn" onclick="event.stopPropagation(); switchContext('${context}')">
+      <button class="switch-btn">
         ${context === currentContext ? 'Current' : 'Switch'}
       </button>
     </div>
-  `
+  `,
     )
     .join('');
 
@@ -1225,13 +1260,24 @@ export function createContextSwitcherUI(
       window.parent.postMessage({
         type: 'tool',
         payload: {
-          toolName: 'appium_switch_context',
+          toolName: 'appium_context',
           params: {
+            action: 'switch',
             context: contextName
           }
         }
       }, '*');
     }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const card = target instanceof Element ? target.closest('.context-card') : null;
+      if (!card) {
+        return;
+      }
+
+      switchContext(card.dataset.context || '');
+    });
   </script>
 </body>
 </html>
@@ -1243,26 +1289,24 @@ export function createContextSwitcherUI(
  * @param apps - Array of app objects with packageName and appName
  * @returns HTML string for app list
  */
-export function createAppListUI(
-  apps: Array<{ packageName: string; appName?: string }>
-): string {
+export function createAppListUI(apps: Array<{packageName: string; appName?: string}>): string {
   const appCards = apps
     .map(
       (app) => `
-    <div class="app-card" data-package="${app.packageName}">
+    <div class="app-card" data-package="${escapeHtml(app.packageName)}">
       <div class="app-header">
-        <h3>${app.appName || app.packageName}</h3>
+        <h3>${escapeHtml(app.appName || app.packageName)}</h3>
       </div>
       <div class="app-details">
-        <p><strong>Package:</strong> <code>${app.packageName}</code></p>
+        <p><strong>Package:</strong> <code>${escapeHtml(app.packageName)}</code></p>
       </div>
       <div class="app-actions">
-        <button class="btn btn-primary" onclick="activateApp('${app.packageName}')">Activate</button>
-        <button class="btn btn-secondary" onclick="terminateApp('${app.packageName}')">Terminate</button>
-        <button class="btn btn-danger" onclick="uninstallApp('${app.packageName}')">Uninstall</button>
+        <button class="btn btn-primary" data-package="${escapeHtml(app.packageName)}" onclick="activateApp(this.dataset.package)">Activate</button>
+        <button class="btn btn-secondary" data-package="${escapeHtml(app.packageName)}" onclick="terminateApp(this.dataset.package)">Terminate</button>
+        <button class="btn btn-danger" data-package="${escapeHtml(app.packageName)}" onclick="uninstallApp(this.dataset.package)">Uninstall</button>
       </div>
     </div>
-  `
+  `,
     )
     .join('');
 
@@ -1461,17 +1505,10 @@ export function createAppListUI(
  * @param language - Code language (java, javascript, etc.)
  * @returns HTML string for test code viewer
  */
-export function createTestCodeViewerUI(
-  code: string,
-  language: string = 'java'
-): string {
-  // Escape HTML for safe display
-  const escapedCode = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+export function createTestCodeViewerUI(code: string, language: string = 'java'): string {
+  const escapedCode = escapeHtml(code);
+  const languageLabel = escapeHtml(language);
+  const downloadExtension = language === 'java' ? 'java' : 'js';
 
   return `
 <!DOCTYPE html>
@@ -1565,7 +1602,7 @@ export function createTestCodeViewerUI(
   <div class="toolbar">
     <div class="toolbar-left">
       <span style="font-size: 14px; font-weight: 500;">💻 Test Code Viewer</span>
-      <span class="language-badge">${language}</span>
+      <span class="language-badge">${languageLabel}</span>
       <span style="font-size: 12px; color: #999;">${code.length} characters, ${code.split('\\n').length} lines</span>
     </div>
     <div class="toolbar-right">
@@ -1591,21 +1628,28 @@ export function createTestCodeViewerUI(
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'TestCode.${language === 'java' ? 'java' : 'js'}';
+      a.download = 'TestCode.${downloadExtension}';
       a.click();
       URL.revokeObjectURL(url);
     }
 
     function formatCode() {
-      // Basic formatting - could be enhanced with a proper formatter
       const content = document.getElementById('codeContent');
       const text = content.textContent;
-      // Add line numbers
       const lines = text.split('\\n');
-      const formatted = lines.map((line, i) =>
-        \`<span class="line-numbers">\${i + 1}</span>\${line}\`
-      ).join('\\n');
-      content.innerHTML = formatted;
+      content.textContent = '';
+
+      lines.forEach((line, index) => {
+        if (index > 0) {
+          content.appendChild(document.createTextNode('\\n'));
+        }
+
+        const lineNumber = document.createElement('span');
+        lineNumber.className = 'line-numbers';
+        lineNumber.textContent = String(index + 1);
+        content.appendChild(lineNumber);
+        content.appendChild(document.createTextNode(line));
+      });
     }
 
     // Initial format
@@ -1618,17 +1662,47 @@ export function createTestCodeViewerUI(
 
 /**
  * Helper function to add UI resource to response content
- * Returns both text and UI resource for backward compatibility
+ * Accepts a lazy factory so NO_UI can skip expensive UI construction.
+ * Returns both text and UI resource for backward compatibility.
  */
 export function addUIResourceToResponse(
-  response: { content: Array<{ type: string; text?: string }> },
-  uiResource: ReturnType<typeof createUIResource>
-): { content: Array<any> } {
+  response: {content: Array<{type: string; text?: string}>},
+  uiResource: ReturnType<typeof createUIResource> | (() => ReturnType<typeof createUIResource>),
+): {content: Array<any>} {
   if (process.env.NO_UI === 'true' || process.env.NO_UI === '1') {
     return response;
   }
 
+  const resolvedUIResource = typeof uiResource === 'function' ? uiResource() : uiResource;
+
   return {
-    content: [...response.content, uiResource],
+    content: [...response.content, resolvedUIResource],
   };
+}
+
+function escapeHtml(value: unknown): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeScriptValue(value: unknown): string {
+  return JSON.stringify(String(value))
+    .replace(/</g, '\\u003C')
+    .replace(/>/g, '\\u003E')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+function sanitizeClassName(value: unknown): string {
+  return escapeHtml(
+    String(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, ''),
+  );
 }

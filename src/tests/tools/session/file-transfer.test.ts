@@ -1,9 +1,18 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import {describe, test, expect, jest, beforeEach} from '@jest/globals';
 
+jest.unstable_mockModule('../../../persistence', () => ({
+  isSessionPersistenceEnabled: jest.fn(() => false),
+  readAllPersistedSessions: jest.fn(async () => []),
+  removePersistedSession: jest.fn(async () => {}),
+  writePersistedSession: jest.fn(async () => {}),
+}));
 jest.unstable_mockModule('../../../session-store', () => ({
+  listPersistedSessions: jest.fn(() => []),
+  removePersistedSession: jest.fn(),
+  setSession: jest.fn(),
   getDriver: jest.fn(),
   getPlatformName: jest.fn(),
-  PLATFORM: { ios: 'iOS', android: 'Android' },
+  PLATFORM: {ios: 'iOS', android: 'Android'},
 }));
 
 jest.unstable_mockModule('../../../command', () => ({
@@ -11,58 +20,73 @@ jest.unstable_mockModule('../../../command', () => ({
 }));
 
 jest.unstable_mockModule('../../../logger', () => ({
-  default: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+  default: {debug: () => {}, info: () => {}, warn: () => {}, error: () => {}},
 }));
 
-const { getDriver, getPlatformName, PLATFORM } =
-  await import('../../../session-store.js');
-const { execute } = await import('../../../command.js');
+const {getDriver, getPlatformName, PLATFORM} = await import('../../../session-store.js');
+const {execute} = await import('../../../command.js');
 
 const mockGetDriver = getDriver as jest.MockedFunction<typeof getDriver>;
-const mockGetPlatformName = getPlatformName as jest.MockedFunction<
-  typeof getPlatformName
->;
+const mockGetPlatformName = getPlatformName as jest.MockedFunction<typeof getPlatformName>;
 const mockExecute = execute as jest.MockedFunction<typeof execute>;
 
-describe('appium_mobile_push_file / appium_mobile_pull_file', () => {
-  const mockServer = { addTool: jest.fn() } as any;
+describe('appium_mobile_file', () => {
+  const mockServer = {addTool: jest.fn()} as any;
 
   beforeEach(() => {
     (mockServer.addTool as jest.MockedFunction<any>).mockClear();
     mockExecute.mockReset();
   });
 
-  test('push: throws when no driver is active', async () => {
-    const { pushFile } =
-      await import('../../../tools/session/file-transfer.js');
-    mockGetDriver.mockReturnValue(null as any);
-    pushFile(mockServer);
+  async function registerTool() {
+    const {default: fileTransfer} = await import('../../../tools/session/file-transfer.js');
+    fileTransfer(mockServer);
+    return (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(-1)?.[0];
+  }
 
-    const tool = (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(
-      -1
-    )?.[0];
-    await expect(
-      tool.execute(
-        { remotePath: '/sdcard/x.txt', payloadBase64: 'YQ==' },
-        undefined
-      )
-    ).rejects.toThrow('No driver found');
+  test('returns error when no driver is active', async () => {
+    const tool = await registerTool();
+    mockGetDriver.mockReturnValue(null as any);
+
+    const result = await tool.execute({action: 'push', remotePath: '/sdcard/x.txt', payloadBase64: 'YQ=='}, undefined);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe(
+      'No active driver session. Use appium_session_management (action=create or action=attach), or pass a valid sessionId.',
+    );
+  });
+
+  test('returns error with sessionId when no driver is active for that session', async () => {
+    const tool = await registerTool();
+
+    const result = await tool.execute(
+      {
+        action: 'push',
+        remotePath: '/sdcard/x.txt',
+        payloadBase64: 'YQ==',
+        sessionId: 'session-123',
+      },
+      undefined,
+    );
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe(
+      "No active driver session for session 'session-123'. Use appium_session_management (action=create or action=attach), or pass a valid sessionId.",
+    );
   });
 
   test('push: Android uses path and data', async () => {
-    const { pushFile } =
-      await import('../../../tools/session/file-transfer.js');
+    const tool = await registerTool();
     mockGetDriver.mockReturnValue({} as any);
     mockGetPlatformName.mockReturnValue(PLATFORM.android);
     mockExecute.mockResolvedValue(undefined);
 
-    pushFile(mockServer);
-    const tool = (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(
-      -1
-    )?.[0];
     await tool.execute(
-      { remotePath: '/data/local/tmp/a.txt', payloadBase64: 'SGVsbG8=' },
-      undefined
+      {
+        action: 'push',
+        remotePath: '/data/local/tmp/a.txt',
+        payloadBase64: 'SGVsbG8=',
+      },
+      undefined,
     );
 
     expect(mockExecute).toHaveBeenCalledWith(
@@ -71,27 +95,23 @@ describe('appium_mobile_push_file / appium_mobile_pull_file', () => {
       expect.objectContaining({
         path: '/data/local/tmp/a.txt',
         data: 'SGVsbG8=',
-      })
+      }),
     );
   });
 
   test('push: iOS uses remotePath and payload', async () => {
-    const { pushFile } =
-      await import('../../../tools/session/file-transfer.js');
+    const tool = await registerTool();
     mockGetDriver.mockReturnValue({} as any);
     mockGetPlatformName.mockReturnValue(PLATFORM.ios);
     mockExecute.mockResolvedValue(undefined);
 
-    pushFile(mockServer);
-    const tool = (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(
-      -1
-    )?.[0];
     await tool.execute(
       {
+        action: 'push',
         remotePath: '@com.example.app:documents/x.txt',
         payloadBase64: 'QQ==',
       },
-      undefined
+      undefined,
     );
 
     expect(mockExecute).toHaveBeenCalledWith(
@@ -100,30 +120,22 @@ describe('appium_mobile_push_file / appium_mobile_pull_file', () => {
       expect.objectContaining({
         remotePath: '@com.example.app:documents/x.txt',
         payload: 'QQ==',
-      })
+      }),
     );
   });
 
   test('pull: Android uses path', async () => {
-    const { pullFile } =
-      await import('../../../tools/session/file-transfer.js');
+    const tool = await registerTool();
     mockGetDriver.mockReturnValue({} as any);
     mockGetPlatformName.mockReturnValue(PLATFORM.android);
     mockExecute.mockResolvedValue('YmJiYg==');
 
-    pullFile(mockServer);
-    const tool = (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(
-      -1
-    )?.[0];
-    const result = await tool.execute(
-      { remotePath: '/sdcard/Download/out.bin' },
-      undefined
-    );
+    const result = await tool.execute({action: 'pull', remotePath: '/sdcard/Download/out.bin'}, undefined);
 
     expect(mockExecute).toHaveBeenCalledWith(
       expect.anything(),
       'mobile: pullFile',
-      expect.objectContaining({ path: '/sdcard/Download/out.bin' })
+      expect.objectContaining({path: '/sdcard/Download/out.bin'}),
     );
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.contentBase64).toBe('YmJiYg==');
@@ -131,25 +143,17 @@ describe('appium_mobile_push_file / appium_mobile_pull_file', () => {
   });
 
   test('pull: iOS uses remotePath', async () => {
-    const { pullFile } =
-      await import('../../../tools/session/file-transfer.js');
+    const tool = await registerTool();
     mockGetDriver.mockReturnValue({} as any);
     mockGetPlatformName.mockReturnValue(PLATFORM.ios);
     mockExecute.mockResolvedValue('eHh4');
 
-    pullFile(mockServer);
-    const tool = (mockServer.addTool as jest.MockedFunction<any>).mock.calls.at(
-      -1
-    )?.[0];
-    const result = await tool.execute(
-      { remotePath: '@com.app:documents/f.txt' },
-      undefined
-    );
+    const result = await tool.execute({action: 'pull', remotePath: '@com.app:documents/f.txt'}, undefined);
 
     expect(mockExecute).toHaveBeenCalledWith(
       expect.anything(),
       'mobile: pullFile',
-      expect.objectContaining({ remotePath: '@com.app:documents/f.txt' })
+      expect.objectContaining({remotePath: '@com.app:documents/f.txt'}),
     );
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.contentBase64).toBe('eHh4');

@@ -1,119 +1,77 @@
-import type { ContentResult, FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { getDriver } from '../../session-store.js';
-import { execute } from '../../command.js';
+import type {ContentResult, FastMCP} from 'fastmcp';
+import {z} from 'zod';
+
+import {execute} from '../../command.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
+
+const schema = z.object({
+  action: z
+    .enum(['hide', 'is_shown'])
+    .describe(
+      'hide: dismiss the software keyboard (mobile: hideKeyboard). ' +
+        'is_shown: whether the keyboard is visible (mobile: isKeyboardShown).',
+    ),
+  keys: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'hide only: optional key names to dismiss the keyboard (e.g. "done"). ' +
+        'Forwarded to mobile: hideKeyboard when non-empty. Ignored for is_shown.',
+    ),
+  sessionId: z.string().optional().describe('Session ID to target. If omitted, uses the active session.'),
+});
+
+type KeyboardArgs = z.infer<typeof schema>;
 
 export default function keyboard(server: FastMCP): void {
-  const hideKeyboardSchema = z.object({
-    keys: z
-      .array(z.string())
-      .optional()
-      .describe(
-        'Optional key names used to dismiss the keyboard (e.g. "done" on tablets). ' +
-          'Maps to the `keys` argument of mobile: hideKeyboard. Omit for default behavior.'
-      ),
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
-  });
-
   server.addTool({
-    name: 'appium_mobile_hide_keyboard',
+    name: 'appium_mobile_keyboard',
     description:
-      'Dismiss the on-screen software keyboard via Appium `mobile: hideKeyboard`. ' +
-      'Supports Android (UiAutomator2) and iOS (XCUITest). ' +
-      'May fail when no dismiss control exists; use gestures or back as a fallback.',
-    parameters: hideKeyboardSchema,
+      'Hide the software keyboard or check if it is visible (Android UiAutomator2 / iOS XCUITest). ' +
+      'action=hide uses mobile: hideKeyboard; action=is_shown uses mobile: isKeyboardShown.',
+    parameters: schema,
     annotations: {
       readOnlyHint: false,
       openWorldHint: false,
     },
-    execute: async (
-      args: z.infer<typeof hideKeyboardSchema>,
-      _context: Record<string, unknown> | undefined
-    ): Promise<ContentResult> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
-      }
-
+    execute: async (args: KeyboardArgs, _context: Record<string, unknown> | undefined): Promise<ContentResult> => {
       try {
-        const params =
-          args.keys && args.keys.length > 0 ? { keys: args.keys } : {};
-        await execute(driver, 'mobile: hideKeyboard', params);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Keyboard dismissed successfully.',
-            },
-          ],
-        };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to hide keyboard. Error: ${message}`,
-            },
-          ],
-        };
-      }
-    },
-  });
-
-  server.addTool({
-    name: 'appium_mobile_is_keyboard_shown',
-    description:
-      'Return whether the system on-screen keyboard is visible using Appium `mobile: isKeyboardShown`. ' +
-      'Supports Android (UiAutomator2) and iOS (XCUITest). Response is JSON: `{ "keyboardShown": true|false }`.',
-    parameters: z.object({
-      sessionId: z
-        .string()
-        .optional()
-        .describe('Session ID to target. If omitted, uses the active session.'),
-    }),
-    annotations: {
-      readOnlyHint: true,
-      openWorldHint: false,
-    },
-    execute: async (
-      args: { sessionId?: string },
-      _context: Record<string, unknown> | undefined
-    ): Promise<ContentResult> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
-      }
-
-      try {
-        const raw = await execute(driver, 'mobile: isKeyboardShown', {});
-        if (typeof raw !== 'boolean') {
-          throw new Error(
-            `Unexpected isKeyboardShown result type: ${typeof raw}`
-          );
+        switch (args.action) {
+          case 'hide':
+            return await handleHide(args.sessionId, args.keys);
+          case 'is_shown':
+            return await handleIsShown(args.sessionId);
         }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({ keyboardShown: raw }, null, 2),
-            },
-          ],
-        };
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to query keyboard visibility. Error: ${message}`,
-            },
-          ],
-        };
+        const msg = toolErrorMessage(err);
+        if (args.action === 'hide') {
+          return errorResult(`Failed to hide keyboard. Error: ${msg}`);
+        }
+        return errorResult(`Failed to query keyboard visibility. Error: ${msg}`);
       }
     },
   });
+}
+
+async function handleHide(sessionId: string | undefined, keys: string[] | undefined): Promise<ContentResult> {
+  const resolved = await resolveDriver(sessionId);
+  if (!resolved.ok) {
+    return resolved.result;
+  }
+  const {driver} = resolved;
+
+  const params = keys && keys.length > 0 ? {keys} : {};
+  await execute(driver, 'mobile: hideKeyboard', params);
+  return textResult('Keyboard dismissed successfully.');
+}
+
+async function handleIsShown(sessionId?: string): Promise<ContentResult> {
+  const resolved = await resolveDriver(sessionId);
+  if (!resolved.ok) {
+    return resolved.result;
+  }
+  const {driver} = resolved;
+
+  const keyboardShown = await execute(driver, 'mobile: isKeyboardShown', {});
+  return textResult(JSON.stringify({keyboardShown}, null, 2));
 }

@@ -1,155 +1,189 @@
-/**
- * Tool to attach to an existing Appium session (local or remote)
- * Includes retry logic for transient network errors (ECONNRESET, ECONNREFUSED)
- */
-import { z } from 'zod';
-import { FastMCP } from 'fastmcp';
-import { setSession } from '../../session-store.js';
-import log from '../../logger.js';
-import WebDriver from 'webdriver';
-import {
-  probeWdaStatus,
-  isRetryableError,
-  sleep,
-} from '../../utils/wda-health.js';
+import {type Client} from 'webdriver';
 
-function getPortFromUrl(url: URL): number {
-  if (url.port) return parseInt(url.port, 10);
-  return url.protocol === 'https:' ? 443 : 80;
+import {readAllPersistedSessions} from '../../persistence.js';
+import {
+  detachSession,
+  getSessionOwnership,
+  listSessions,
+  setSession,
+  type SessionCapabilities,
+  type SessionOwnership,
+} from '../../session-store.js';
+import {attachToRemoteSession, getPortFromUrl} from '../../utils/url.js';
+import {errorResult, textResult, toolErrorMessage} from '../tool-response.js';
+import {validateRemoteServerUrl} from './create-session.js';
+
+/**
+ * Normalize capability payloads returned by Appium/WebdriverIO into a flat
+ * capability record.
+ *
+ * @param value - Raw response payload from session capability APIs.
+ * @returns A capability record when one can be derived, otherwise `undefined`.
+ */
+function readCapabilities(value: unknown): SessionCapabilities | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  const nested = record.capabilities ?? record.caps;
+
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    return nested as SessionCapabilities;
+  }
+
+  return record as SessionCapabilities;
 }
 
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000;
+const METADATA_FIELDS = [
+  ['platformName', 'appium:platformName', 'platformName'],
+  ['automationName', 'appium:automationName', 'appium:automationName'],
+  ['deviceName', 'appium:deviceName', 'appium:deviceName'],
+] as const;
 
-export default function attachSession(server: FastMCP): void {
-  (server as any).addTool({
-    name: 'attach_session',
-    description:
-      'Attach to an existing Appium session on a local or remote server. ' +
-      'Use this to connect to a session created by another process (e.g. IntelliJ test, Appium Inspector). ' +
-      'The session must already exist on the Appium server. ' +
-      'Retries automatically on transient network errors (ECONNRESET).',
-    parameters: z.object({
-      sessionId: z.string().describe('The session ID to attach to.'),
-      serverUrl: z
-        .string()
-        .optional()
-        .describe(
-          'Appium server URL (e.g. http://localhost:4723). Defaults to http://localhost:4723.'
-        ),
-      platform: z
-        .enum(['android', 'ios'])
-        .optional()
-        .describe('Platform hint for the session. Defaults to android.'),
-    }),
-    annotations: { readOnlyHint: false, openWorldHint: false },
-    execute: async (args: {
-      sessionId: string;
-      serverUrl?: string;
-      platform?: string;
-    }) => {
-      const serverUrl = args.serverUrl || 'http://localhost:4723';
-      const platform = args.platform || 'android';
-      let lastError: Error | null = null;
+/**
+ * Attach MCP Appium to an existing remote Appium session without taking
+ * ownership of the underlying session lifecycle.
+ *
+ * Session capabilities are fetched from the server before creating the
+ * WebDriver client so that WebDriver.attachToSession receives the full
+ * capability set (including platformName) and sessionEnvironmentDetector can
+ * correctly configure isMobile / isAndroid / isIOS on the client instance.
+ *
+ * @param args - Remote server location, target session id, and optional
+ *   capability overrides.
+ * @returns A tool response describing whether the attachment succeeded.
+ */
+export async function attachSessionAction(args: {
+  remoteServerUrl: string;
+  sessionId: string;
+  capabilities?: Record<string, any>;
+}): Promise<any> {
+  try {
+    const existingOwnership = getSessionOwnership(args.sessionId);
+    if (existingOwnership === 'owned') {
+      return errorResult(
+        `Session ${args.sessionId} is already managed by MCP Appium as an owned session. Use action=select to activate it.`,
+      );
+    }
+    if (existingOwnership === 'attached') {
+      detachSession(args.sessionId);
+    }
 
-      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        try {
-          if (attempt > 0) {
-            const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-            log.info(
-              `Retry attempt ${attempt}/${MAX_RETRIES} after ${delay}ms...`
-            );
-            await sleep(delay);
+    validateRemoteServerUrl(args.remoteServerUrl, process.env.REMOTE_SERVER_URL_ALLOW_REGEX);
 
-            // Check if the server is still reachable before retrying
-            const probe = await probeWdaStatus(serverUrl);
-            if (!probe.alive) {
-              log.warn(
-                `Server at ${serverUrl} is not responding. Aborting retries.`
-              );
-              break;
-            }
-          }
+    // Fetch capabilities from the server BEFORE creating the WebDriver client.
+    // This ensures WebDriver.attachToSession receives platformName so that
+    // sessionEnvironmentDetector configures isMobile / isAndroid / isIOS
+    // correctly. Caller-provided capabilities take the lowest priority; the W3C
+    // Appium extension endpoint wins.
+    const [sessionCapabilities, deprecatedSessionCapabilities] = await Promise.all([
+      fetchCapabilitiesFromServer(args.remoteServerUrl, args.sessionId, 'appium/session_capabilities'),
+      fetchCapabilitiesFromServer(args.remoteServerUrl, args.sessionId),
+    ]);
 
-          const url = new URL(serverUrl);
-          const protocol = url.protocol.replace(':', '') as 'http' | 'https';
-          const port = getPortFromUrl(url);
-          const user = url.username
-            ? decodeURIComponent(url.username)
-            : undefined;
-          const key = url.password
-            ? decodeURIComponent(url.password)
-            : undefined;
+    if (sessionCapabilities === undefined && deprecatedSessionCapabilities === undefined) {
+      return errorResult(
+        `Failed to fetch capabilities for session ${args.sessionId} from ${args.remoteServerUrl}. ` +
+          `The server may be unreachable or the session may no longer exist.`,
+      );
+    }
 
-          log.info(
-            `Attaching to session ${args.sessionId} on ${protocol}://${url.hostname}:${port}${url.pathname}`
-          );
+    const sources = [sessionCapabilities, deprecatedSessionCapabilities, args.capabilities];
+    const capabilities: SessionCapabilities = Object.assign(
+      {},
+      args.capabilities ?? {},
+      deprecatedSessionCapabilities ?? {},
+      sessionCapabilities ?? {},
+    );
 
-          const client = WebDriver.attachToSession({
-            sessionId: args.sessionId,
-            protocol,
-            hostname: url.hostname,
-            port,
-            path: url.pathname,
-            ...(user && key ? { user, key } : {}),
-          });
+    const client: Client = await attachToRemoteSession({
+      remoteServerUrl: args.remoteServerUrl,
+      sessionId: args.sessionId,
+      capabilities,
+    });
 
-          const capabilities: Record<string, any> = {
-            platformName: platform === 'ios' ? 'iOS' : 'Android',
-            'appium:automationName':
-              platform === 'ios' ? 'XCUITest' : 'UiAutomator2',
-          };
-
-          setSession(client, args.sessionId, capabilities);
-          log.info(`Attached to session ${args.sessionId} successfully.`);
-
-          const retryNote =
-            attempt > 0 ? ` (succeeded after ${attempt} retries)` : '';
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text:
-                  `Attached to session ${args.sessionId} on ${serverUrl}${retryNote}.\n` +
-                  `Platform: ${platform === 'ios' ? 'iOS' : 'Android'}\n` +
-                  `You can now use all Appium tools on this session.`,
-              },
-            ],
-          };
-        } catch (error: any) {
-          lastError = error;
-          if (!isRetryableError(error) || attempt === MAX_RETRIES) {
-            break;
-          }
-          log.warn(
-            `Retryable error on attempt ${attempt}: ${error.message}`
-          );
-        }
+    // Normalize metadata fields into their canonical prefixed forms for
+    // local session tracking.
+    for (const [plainKey, prefixedKey, targetKey] of METADATA_FIELDS) {
+      const source = sources.find(
+        (candidate) => candidate?.[plainKey] !== undefined || candidate?.[prefixedKey] !== undefined,
+      );
+      const value = source?.[plainKey] ?? source?.[prefixedKey];
+      delete capabilities[plainKey];
+      delete capabilities[prefixedKey];
+      if (value !== undefined) {
+        capabilities[targetKey] = value;
       }
+    }
 
-      // Build diagnostic message
-      log.error('Failed to attach to session:', lastError);
-      let diagnostics = '';
-      try {
-        const probe = await probeWdaStatus(serverUrl);
-        diagnostics = probe.alive
-          ? 'Server is responding but session attachment failed. The session may no longer exist.'
-          : `Server at ${serverUrl} is not responding. Check that WDA/Appium is running.`;
-      } catch {
-        diagnostics = 'Could not reach server for diagnostics.';
+    // If a persisted entry exists for this sessionId from a previous process
+    // that owned it, preserve 'owned' so the disconnect handler still cleans
+    // it up after this process exits. Users explicitly calling action=attach
+    // get the default 'attached' semantics otherwise.
+    let desiredOwnership: SessionOwnership = 'attached';
+    try {
+      const persisted = await readAllPersistedSessions();
+      const prior = persisted.find((p) => p.sessionId === args.sessionId);
+      if (prior?.ownership === 'owned') {
+        desiredOwnership = 'owned';
       }
+    } catch {
+      // ignore — falling back to 'attached' is safe
+    }
+    await setSession(client, args.sessionId, capabilities, desiredOwnership, args.remoteServerUrl);
 
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text:
-              `Failed to attach to session ${args.sessionId} after ${MAX_RETRIES + 1} attempts: ${lastError?.message}\n\n` +
-              `Diagnostics: ${diagnostics}`,
-          },
-        ],
-        isError: true,
-      };
-    },
-  });
+    return textResult(`Attached to existing session ${args.sessionId}. Active sessions: ${listSessions().length}`);
+  } catch (err: unknown) {
+    return errorResult(`Failed to attach session ${args.sessionId}. ${toolErrorMessage(err)}`);
+  }
+}
+
+/**
+ * Fetch session capabilities from the Appium server via a plain HTTP request.
+ *
+ * Making this request before WebDriver.attachToSession avoids the ordering
+ * problem where the client is created before platformName is known.
+ *
+ * @param remoteServerUrl - Base URL of the Appium server.
+ * @param sessionId - ID of the existing session to query.
+ * @param endpoint - Optional sub-path after `/session/{id}/`.
+ * @returns Parsed capabilities, or `undefined` when the request fails or the
+ *   endpoint is not supported by the server.
+ */
+async function fetchCapabilitiesFromServer(
+  remoteServerUrl: string,
+  sessionId: string,
+  endpoint?: string,
+): Promise<SessionCapabilities | undefined> {
+  try {
+    const url = new URL(remoteServerUrl);
+    const port = getPortFromUrl(url);
+    const basePath = url.pathname.replace(/\/$/, '');
+    const path = `${basePath}/session/${sessionId}${endpoint ? '/' + endpoint : ''}`;
+    const requestUrl = `${url.protocol}//${url.hostname}:${port}${path}`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (url.username && url.password) {
+      const credentials = Buffer.from(
+        `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`,
+      ).toString('base64');
+      headers.Authorization = `Basic ${credentials}`;
+    }
+
+    const response = await fetch(requestUrl, {
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const json = (await response.json()) as {value?: unknown};
+    return readCapabilities(json.value);
+  } catch {
+    return undefined;
+  }
 }

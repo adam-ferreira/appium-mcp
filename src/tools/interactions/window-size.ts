@@ -1,7 +1,8 @@
-import type { ContentResult, FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { getDriver } from '../../session-store.js';
-import { getWindowSize as cmdGetWindowSize } from '../../command.js';
+import type {ContentResult, FastMCP} from 'fastmcp';
+import {z} from 'zod';
+
+import {getWindowSize as cmdGetWindowSize} from '../../command.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
 
 export default function getWindowSize(server: FastMCP): void {
   server.addTool({
@@ -9,41 +10,27 @@ export default function getWindowSize(server: FastMCP): void {
     description:
       'Get the width and height of the device screen in pixels. Useful for calculating coordinates for swipes, taps, and scrolls.',
     parameters: z.object({
-      sessionId: z
-        .string()
-        .optional()
-        .describe('Session ID to target. If omitted, uses the active session.'),
+      sessionId: z.string().optional().describe('Session ID to target. If omitted, uses the active session.'),
     }),
     annotations: {
       readOnlyHint: true,
       openWorldHint: false,
     },
     execute: async (
-      args: { sessionId?: string },
-      _context: Record<string, unknown> | undefined
+      args: {sessionId?: string},
+      _context: Record<string, unknown> | undefined,
     ): Promise<ContentResult> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
+      const resolved = await resolveDriver(args.sessionId);
+      if (!resolved.ok) {
+        return resolved.result;
       }
+      const {driver} = resolved;
 
       try {
-        const { width, height } = await cmdGetWindowSize(driver);
-        return {
-          content: [
-            { type: 'text', text: `Width: ${width}, Height: ${height}` },
-          ],
-        };
+        const {width, height} = await cmdGetWindowSize(driver);
+        return textResult(`Width: ${width}, Height: ${height}`);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to get window size. Error: ${message}`,
-            },
-          ],
-        };
+        return errorResult(`Failed to get window size. Error: ${toolErrorMessage(err)}`);
       }
     },
   });

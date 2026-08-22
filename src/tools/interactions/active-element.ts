@@ -1,14 +1,18 @@
-import type { ContentResult, FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { getDriver } from '../../session-store.js';
-import { getActiveElement as _getActiveElement } from '../../command.js';
+import type {ContentResult, FastMCP} from 'fastmcp';
+import {z} from 'zod';
+
+import {getActiveElement as _getActiveElement} from '../../command.js';
+import {
+  resolveDriver,
+  textResultWithPrimaryElementId,
+  errorResult,
+  toolErrorMessage,
+  readWebElementId,
+} from '../tool-response.js';
 
 export default function getActiveElement(server: FastMCP): void {
   const schema = z.object({
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
+    sessionId: z.string().optional().describe('Session ID to target. If omitted, uses the active session.'),
   });
 
   server.addTool({
@@ -21,40 +25,23 @@ export default function getActiveElement(server: FastMCP): void {
       openWorldHint: false,
     },
     execute: async (args: z.infer<typeof schema>): Promise<ContentResult> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
+      const resolved = await resolveDriver(args.sessionId);
+      if (!resolved.ok) {
+        return resolved.result;
       }
+      const {driver} = resolved;
 
       try {
         const element = await _getActiveElement(driver);
-        const elementId =
-          element['element-6066-11e4-a52e-4f735466cecf'] ??
-          (element as unknown as { ELEMENT?: string }).ELEMENT;
+        const elementId = readWebElementId(element);
 
         if (!elementId) {
-          throw new Error(
-            'Active element was returned without a valid element ID'
-          );
+          return errorResult('Active element was returned without a valid element ID');
         }
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Successfully found an active element. Element id: ${elementId}`,
-            },
-          ],
-        };
-      } catch (err: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to find an active element. err: ${err.toString()}`,
-            },
-          ],
-        };
+        return textResultWithPrimaryElementId(elementId, 'Successfully found an active element.');
+      } catch (err: unknown) {
+        return errorResult(`Failed to find an active element. err: ${toolErrorMessage(err)}`);
       }
     },
   });

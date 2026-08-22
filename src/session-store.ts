@@ -1,29 +1,31 @@
-import { AndroidUiautomator2Driver } from 'appium-uiautomator2-driver';
-import { XCUITestDriver } from 'appium-xcuitest-driver';
-import type { Client } from 'webdriver';
+import type {AndroidUiautomator2Driver} from 'appium-uiautomator2-driver';
+import type {XCUITestDriver} from 'appium-xcuitest-driver';
+import type {Client} from 'webdriver';
+
 import log from './logger.js';
+import {removePersistedSession, writePersistedSession} from './persistence.js';
 
 // Type aliases for driver variants used throughout the project.
-export type DriverInstance =
-  | Client
-  | AndroidUiautomator2Driver
-  | XCUITestDriver;
+export type DriverInstance = Client | AndroidUiautomator2Driver | XCUITestDriver;
 export type NullableDriverInstance = DriverInstance | null;
 export type SessionCapabilities = Record<string, any>;
+export type SessionOwnership = 'owned' | 'attached';
+
+export interface SessionInfo {
+  driver: DriverInstance;
+  sessionId: string;
+  currentContext: string | null;
+  isDeletingSession: boolean;
+  ownership: SessionOwnership;
+  metadata: SessionMetadata;
+  remoteServerUrl?: string;
+}
 
 interface SessionMetadata {
   platform: string | null;
   automationName: string | null;
   deviceName: string | null;
   capabilities: SessionCapabilities;
-}
-
-interface SessionInfo {
-  driver: DriverInstance;
-  sessionId: string;
-  currentContext: string | null;
-  isDeletingSession: boolean;
-  metadata: SessionMetadata;
 }
 
 /**
@@ -41,20 +43,16 @@ export const PLATFORM = {
 };
 
 /**
- * Determine whether the provided driver represents a remote driver session.
+ * Determine whether the provided driver represents a remote Appium session
+ * (i.e. a `Client` obtained via `WebDriver.newSession`) rather than an
+ * in-process `AndroidUiautomator2Driver` or `XCUITestDriver`.
  *
- * This checks for the presence of a string-valued `sessionId` property on the
- * driver object, which indicates a remote/WebDriver session.
- *
- * @param driver - The driver instance to inspect (may be a Client, AndroidUiautomator2Driver, XCUITestDriver, or null).
- * @returns `true` if `driver` is non-null and has a string `sessionId`; otherwise `false`.
+ * @param driver - The driver instance to inspect.
+ * @returns `true` if `driver` is non-null and not an embedded Appium driver.
  */
 export function isRemoteDriverSession(driver: NullableDriverInstance): boolean {
   if (driver) {
-    return (
-      !(driver instanceof AndroidUiautomator2Driver) &&
-      !(driver instanceof XCUITestDriver)
-    );
+    return driver.constructor?.name !== 'AndroidUiautomator2Driver' && driver.constructor?.name !== 'XCUITestDriver';
   }
   return false;
 }
@@ -72,9 +70,9 @@ export function isRemoteDriverSession(driver: NullableDriverInstance): boolean {
  * @returns `true` if `driver` is an `AndroidUiautomator2Driver`.
  */
 export function isAndroidUiautomator2DriverSession(
-  driver: NullableDriverInstance
+  driver: NullableDriverInstance,
 ): driver is AndroidUiautomator2Driver {
-  return driver instanceof AndroidUiautomator2Driver;
+  return driver?.constructor?.name === 'AndroidUiautomator2Driver';
 }
 
 /**
@@ -88,44 +86,18 @@ export function isAndroidUiautomator2DriverSession(
  *   `AndroidUiautomator2Driver`, `XCUITestDriver`, or `null`).
  * @returns `true` if `driver` is an `XCUITestDriver`.
  */
-export function isXCUITestDriverSession(
-  driver: NullableDriverInstance
-): driver is XCUITestDriver {
-  return driver instanceof XCUITestDriver;
+export function isXCUITestDriverSession(driver: NullableDriverInstance): driver is XCUITestDriver {
+  return driver?.constructor?.name === 'XCUITestDriver';
 }
 
-export function setSession(
+export async function setSession(
   d: DriverInstance,
   id: string | null,
-  capabilities: SessionCapabilities = {}
-) {
-  if (!id) {
-    activeSessionId = null;
-    return;
-  }
-
-  const metadata: SessionMetadata = {
-    platform:
-      (capabilities.platformName as string | undefined) ??
-      (capabilities['appium:platformName'] as string | undefined) ??
-      null,
-    automationName:
-      (capabilities['appium:automationName'] as string | undefined) ?? null,
-    deviceName:
-      (capabilities['appium:deviceName'] as string | undefined) ??
-      (capabilities.deviceName as string | undefined) ??
-      null,
-    capabilities,
-  };
-
-  sessions.set(id, {
-    driver: d,
-    sessionId: id,
-    currentContext: 'NATIVE_APP',
-    isDeletingSession: false,
-    metadata,
-  });
-  activeSessionId = id;
+  capabilities: SessionCapabilities = {},
+  ownership: SessionOwnership = 'owned',
+  remoteServerUrl?: string,
+): Promise<void> {
+  await setSessionEntry(d, id, capabilities, ownership, remoteServerUrl);
 }
 
 export function getDriver(sessionId?: string): NullableDriverInstance {
@@ -136,23 +108,6 @@ export function getDriver(sessionId?: string): NullableDriverInstance {
   return sessions.get(id)?.driver ?? null;
 }
 
-/**
- * Get a driver instance or throw if none is available.
- * Accepts an optional sessionId to target a specific session
- * instead of the currently active one.
- */
-export function getDriverOrThrow(sessionId?: string): DriverInstance {
-  const driver = getDriver(sessionId);
-  if (!driver) {
-    throw new Error(
-      sessionId
-        ? `No driver found for session ${sessionId}`
-        : 'No active session. Call create_session first.'
-    );
-  }
-  return driver;
-}
-
 export function getSessionId() {
   return activeSessionId;
 }
@@ -161,6 +116,7 @@ export function listSessions(): Array<{
   sessionId: string;
   currentContext: string | null;
   isActive: boolean;
+  ownership: SessionOwnership;
   platform: string | null;
   automationName: string | null;
   deviceName: string | null;
@@ -170,11 +126,30 @@ export function listSessions(): Array<{
     sessionId: session.sessionId,
     currentContext: session.currentContext,
     isActive: session.sessionId === activeSessionId,
+    ownership: session.ownership,
     platform: session.metadata.platform,
     automationName: session.metadata.automationName,
     deviceName: session.metadata.deviceName,
     capabilities: session.metadata.capabilities,
   }));
+}
+
+/**
+ * Return the ownership mode for a session.
+ *
+ * Owned sessions were created by MCP Appium and should be deleted through MCP.
+ * Attached sessions were adopted from an external Appium server and can be
+ * detached without deleting the remote session.
+ *
+ * @param sessionId - Optional session id to inspect. Defaults to the active session.
+ * @returns The session ownership mode, or `null` when the session is missing.
+ */
+export function getSessionOwnership(sessionId?: string): SessionOwnership | null {
+  const id = sessionId ?? activeSessionId;
+  if (!id) {
+    return null;
+  }
+  return sessions.get(id)?.ownership ?? null;
 }
 
 export function setActiveSession(sessionId: string): boolean {
@@ -185,10 +160,7 @@ export function setActiveSession(sessionId: string): boolean {
   return true;
 }
 
-export function setCurrentContext(
-  context: string,
-  sessionId?: string
-): boolean {
+export function setCurrentContext(context: string, sessionId?: string): boolean {
   const id = sessionId ?? activeSessionId;
   if (!id) {
     return false;
@@ -201,6 +173,14 @@ export function setCurrentContext(
 
   session.currentContext = context;
   return true;
+}
+
+export function getSessionInfo(sessionId?: string): SessionInfo | null {
+  const id = sessionId ?? activeSessionId;
+  if (!id) {
+    return null;
+  }
+  return sessions.get(id) ?? null;
 }
 
 export function getCurrentContext(sessionId?: string): string | null {
@@ -227,15 +207,33 @@ export function hasActiveSession(): boolean {
   return !!session && !session.isDeletingSession;
 }
 
-function selectNextActiveSessionId(deletedSessionId: string): string | null {
-  if (activeSessionId !== deletedSessionId) {
-    return activeSessionId;
+/**
+ * Remove an attached session from the in-memory MCP session registry without
+ * calling `deleteSession()` on the remote Appium server.
+ *
+ * @param sessionId - Optional session id to detach. Defaults to the active session.
+ * @throws {Error} If there is no target session, the session is missing, or
+ *   the session is owned by MCP Appium.
+ */
+export function detachSession(sessionId?: string): void {
+  const id = sessionId ?? activeSessionId;
+  if (!id) {
+    throw new Error('No active session to detach.');
   }
 
-  const nextSession = Array.from(sessions.keys()).find(
-    (id) => id !== deletedSessionId
-  );
-  return nextSession ?? null;
+  const session = sessions.get(id);
+  if (!session) {
+    throw new Error(`Session ${id} not found.`);
+  }
+
+  if (session.ownership !== 'attached') {
+    throw new Error(`Session ${id} is owned by MCP Appium. Use action=delete to remove it.`);
+  }
+
+  sessions.delete(id);
+  activeSessionId = selectNextActiveSessionId(id);
+  void removePersistedSession(id);
+  log.info(`Session ${id} detached successfully.`);
 }
 
 export async function safeDeleteSession(sessionId?: string): Promise<boolean> {
@@ -270,6 +268,7 @@ export async function safeDeleteSession(sessionId?: string): Promise<boolean> {
     // Clear the session from store
     sessions.delete(id);
     activeSessionId = selectNextActiveSessionId(id);
+    void removePersistedSession(id);
 
     log.info(`Session ${id} deleted successfully.`);
     return true;
@@ -287,7 +286,9 @@ export async function safeDeleteSession(sessionId?: string): Promise<boolean> {
 
 export async function safeDeleteAllSessions(): Promise<number> {
   let deletedCount = 0;
-  const sessionIds = Array.from(sessions.keys());
+  const sessionIds = Array.from(sessions.values())
+    .filter((session) => session.ownership === 'owned')
+    .map((session) => session.sessionId);
 
   for (const sessionId of sessionIds) {
     try {
@@ -303,18 +304,101 @@ export async function safeDeleteAllSessions(): Promise<number> {
   return deletedCount;
 }
 
+async function setSessionEntry(
+  d: DriverInstance,
+  id: string | null,
+  capabilities: SessionCapabilities,
+  ownership: SessionOwnership,
+  remoteServerUrl?: string,
+): Promise<void> {
+  if (!id) {
+    activeSessionId = null;
+    return;
+  }
+
+  // `getAppiumSessionCapabilities()` may return metadata fields without the
+  // `appium:` prefix, so accept both namespaced and non-namespaced variants.
+  const metadata: SessionMetadata = {
+    platform: (capabilities.platformName as string | undefined) ?? null,
+    automationName:
+      (capabilities['appium:automationName'] as string | undefined) ??
+      (capabilities.automationName as string | undefined) ??
+      null,
+    deviceName:
+      (capabilities['appium:deviceName'] as string | undefined) ??
+      (capabilities.deviceName as string | undefined) ??
+      null,
+    capabilities,
+  };
+
+  sessions.set(id, {
+    driver: d,
+    sessionId: id,
+    currentContext: 'NATIVE_APP',
+    isDeletingSession: false,
+    ownership,
+    metadata,
+    remoteServerUrl,
+  });
+  activeSessionId = id;
+
+  if (remoteServerUrl) {
+    await writePersistedSession({
+      sessionId: id,
+      remoteServerUrl,
+      capabilities,
+      platform: metadata.platform,
+      automationName: metadata.automationName,
+      deviceName: metadata.deviceName,
+      ownership,
+    });
+  }
+}
+
+function selectNextActiveSessionId(deletedSessionId: string): string | null {
+  if (activeSessionId !== deletedSessionId) {
+    return activeSessionId;
+  }
+
+  const nextSession = Array.from(sessions.keys()).find((id) => id !== deletedSessionId);
+  return nextSession ?? null;
+}
+
 export const getPlatformName = (driver: any): string => {
-  if (driver instanceof AndroidUiautomator2Driver) {
+  if (driver?.constructor?.name === 'AndroidUiautomator2Driver') {
     return PLATFORM.android;
   }
-  if (driver instanceof XCUITestDriver) {
+  if (driver?.constructor?.name === 'XCUITestDriver') {
     return PLATFORM.ios;
   }
 
-  if ((driver as Client).isAndroid) {
+  const client = driver as Client;
+  if (client.isAndroid) {
     return PLATFORM.android;
-  } else if ((driver as Client).isIOS) {
+  }
+  if (client.isIOS) {
     return PLATFORM.ios;
+  }
+
+  const session = listSessions().find((s) => s.sessionId === client.sessionId);
+  if (session && session.platform) {
+    return session.platform;
+  }
+
+  // Fallback: check by sessionId directly on the map (covers attached sessions
+  // where isAndroid/isIOS flags aren't set on the raw webdriver Client).
+  if (client.sessionId) {
+    const info = sessions.get(client.sessionId);
+    const platformName = info?.metadata.platform;
+    if (platformName) {
+      if (/android/i.test(platformName)) {
+        return PLATFORM.android;
+      }
+      if (/ios/i.test(platformName)) {
+        return PLATFORM.ios;
+      }
+      return platformName;
+    }
   }
 
   throw new Error('Unknown driver type');

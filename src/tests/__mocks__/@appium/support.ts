@@ -1,73 +1,73 @@
-// Mock @appium/support for Jest tests
-// This avoids the ESM/CommonJS mismatch with uuid dependency
+import {constants, existsSync, promises as fsPromises} from 'node:fs';
+
+const noop = () => {};
 
 export const logger = {
-  getLogger: (_name: string) =>
-    // Simple logger implementation for tests
-    // No-op functions that match the logger interface
-    ({
-      debug: (_message: string, ..._args: any[]) => {
-        // Silent in tests by default
-      },
-      info: (_message: string, ..._args: any[]) => {
-        // Silent in tests by default
-      },
-      warn: (_message: string, ..._args: any[]) => {
-        // Silent in tests by default
-      },
-      error: (_message: string, ..._args: any[]) => {
-        // Silent in tests by default
-      },
-      trace: (_message: string, ..._args: any[]) => {
-        // Silent in tests by default
-      },
-    }),
+  getLogger: (_name: string) => ({
+    debug: noop,
+    info: noop,
+    warn: noop,
+    error: noop,
+    trace: noop,
+  }),
 };
 
-/**
- * Mock imageUtil for Jest tests.
- *
- * A single shared sharpInstance is used across all calls so tests can
- * inspect and override its methods (resize / jpeg / toBuffer) via
- * mockSharpInstance exported below.
- */
-
-export type MockSharpInstance = {
-  resizeCalls: Array<[number, number]>;
-  toBufferImpl: () => Promise<Buffer>;
-  resize: (w: number, h: number) => MockSharpInstance;
-  jpeg: (_opts?: unknown) => MockSharpInstance;
-  toBuffer: () => Promise<Buffer>;
-  reset: () => void;
-};
-
-/** Shared instance – tests can mutate toBufferImpl or inspect resizeCalls */
-export const mockSharpInstance: MockSharpInstance = {
-  resizeCalls: [],
-  toBufferImpl: () => Promise.resolve(Buffer.from('mock-compressed-image')),
-  resize(w: number, h: number) {
-    this.resizeCalls.push([w, h]);
-    return this;
+export const fs = {
+  hasAccess: async (p: string) => {
+    try {
+      await fsPromises.access(p, constants.R_OK);
+      return true;
+    } catch {
+      return false;
+    }
   },
-  jpeg(_opts?: unknown) {
-    return this;
-  },
-  toBuffer() {
-    return this.toBufferImpl();
-  },
-  reset() {
-    this.resizeCalls = [];
-    this.toBufferImpl = () =>
-      Promise.resolve(Buffer.from('mock-compressed-image'));
+  exists: async (p: string) => existsSync(p),
+  readdir: (p: string) => fsPromises.readdir(p),
+  stat: (p: string) => fsPromises.stat(p),
+  readFile: (p: string, encoding?: BufferEncoding) => fsPromises.readFile(p, encoding),
+  writeFile: (p: string, data: string | Buffer, encoding?: BufferEncoding) => fsPromises.writeFile(p, data, encoding),
+  unlink: (p: string) => fsPromises.unlink(p),
+  rename: (from: string, to: string) => fsPromises.rename(from, to),
+  mkdir: (p: string, opts?: {recursive?: boolean}) => fsPromises.mkdir(p, opts),
+  mkdirp: (p: string) => fsPromises.mkdir(p, {recursive: true}),
+  mv: async (from: string, to: string) => {
+    await fsPromises.rename(from, to);
   },
 };
 
 export const imageUtil = {
-  requireSharp: () => (_input: Buffer) => mockSharpInstance,
+  requireSharp: () => {
+    throw new Error('imageUtil.requireSharp must be mocked by the test');
+  },
 };
 
-// Export other commonly used utilities from @appium/support if needed
+export const util = {
+  wrapElement: (elementId: string) => ({
+    ELEMENT: elementId,
+    'element-6066-11e4-a52e-4f735466cecf': elementId,
+  }),
+};
+
+export const net = {
+  downloadFile: async () => {},
+};
+
+export const plist = {
+  parsePlistFile: async () => ({}),
+};
+
+export const zip = {
+  extractAllTo: async () => {},
+  readEntries: async () => {},
+  toArchive: async () => {},
+};
+
 export default {
   logger,
+  fs,
   imageUtil,
+  util,
+  net,
+  plist,
+  zip,
 };

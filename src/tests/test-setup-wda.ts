@@ -1,15 +1,13 @@
+import fs from 'node:fs';
+import https from 'node:https';
+import os from 'node:os';
 /**
  * Test file for setup-wda tool
  * Run with: npx tsx src/tests/test-setup-wda.ts
  */
 import path from 'node:path';
-import fs from 'node:fs';
-import os from 'node:os';
-import https from 'node:https';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
 
-const execAsync = promisify(exec);
+import {exec} from 'teen_process';
 
 async function downloadFile(url: string, destPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -21,8 +19,13 @@ async function downloadFile(url: string, destPath: string): Promise<void> {
         if (response.statusCode === 302 || response.statusCode === 301) {
           file.close();
           fs.unlinkSync(destPath);
+          const redirectUrl = response.headers.location;
+          if (!redirectUrl) {
+            reject(new Error('Redirect response did not include a Location header'));
+            return;
+          }
           try {
-            await downloadFile(response.headers.location!, destPath);
+            await downloadFile(redirectUrl, destPath);
             resolve();
           } catch (err) {
             reject(err);
@@ -33,22 +36,17 @@ async function downloadFile(url: string, destPath: string): Promise<void> {
         if (response.statusCode !== 200) {
           file.close();
           fs.unlinkSync(destPath);
-          return reject(
-            new Error(`Failed to download: ${response.statusCode}`)
-          );
+          return reject(new Error(`Failed to download: ${response.statusCode}`));
         }
 
-        const totalSize = parseInt(
-          response.headers['content-length'] || '0',
-          10
-        );
+        const totalSize = parseInt(response.headers['content-length'] || '0', 10);
         let downloadedSize = 0;
 
         response.on('data', (chunk) => {
           downloadedSize += chunk.length;
           const percent = ((downloadedSize / totalSize) * 100).toFixed(1);
           process.stdout.write(
-            `\r   Downloading... ${percent}% (${Math.round(downloadedSize / 1024 / 1024)}MB / ${Math.round(totalSize / 1024 / 1024)}MB)`
+            `\r   Downloading... ${percent}% (${Math.round(downloadedSize / 1024 / 1024)}MB / ${Math.round(totalSize / 1024 / 1024)}MB)`,
           );
         });
 
@@ -70,7 +68,7 @@ async function downloadFile(url: string, destPath: string): Promise<void> {
 
 async function unzipFile(zipPath: string, destDir: string): Promise<void> {
   console.log(`   Extracting to: ${destDir}`);
-  await execAsync(`unzip -q "${zipPath}" -d "${destDir}"`);
+  await exec('unzip', ['-q', zipPath, '-d', destDir]);
   console.log('   ✅ Extraction complete');
 }
 
@@ -128,17 +126,12 @@ async function main() {
     console.log('\n🔍 Fetching latest WDA version from GitHub...');
     const wdaVersion = await getLatestWDAVersion();
     console.log(`✅ Latest WDA Version: v${wdaVersion}`);
-    console.log(
-      '   Source: https://github.com/appium/WebDriverAgent/releases/latest'
-    );
+    console.log('   Source: https://github.com/appium/WebDriverAgent/releases/latest');
 
     // Create cache directory structure using home directory
     const versionCacheDir = cachePath(`wda/${wdaVersion}`);
     const extractDir = path.join(versionCacheDir, 'extracted');
-    const zipPath = path.join(
-      versionCacheDir,
-      'WebDriverAgentRunner-Runner.zip'
-    );
+    const zipPath = path.join(versionCacheDir, 'WebDriverAgentRunner-Runner.zip');
     const appPath = path.join(extractDir, 'WebDriverAgentRunner-Runner.app');
 
     console.log('\n📁 Cache Directory:', versionCacheDir);
@@ -166,8 +159,8 @@ async function main() {
     console.log('\n⚠️  Version not found in cache. Downloading...');
 
     // Create cache directories
-    fs.mkdirSync(versionCacheDir, { recursive: true });
-    fs.mkdirSync(extractDir, { recursive: true });
+    fs.mkdirSync(versionCacheDir, {recursive: true});
+    fs.mkdirSync(extractDir, {recursive: true});
 
     // Download URL
     const downloadUrl = `https://github.com/appium/WebDriverAgent/releases/download/v${wdaVersion}/WebDriverAgentRunner-Runner.zip`;
@@ -217,9 +210,7 @@ async function main() {
     console.log('\n' + '='.repeat(60));
     console.log('🎉 Download and setup completed successfully!');
     console.log(`\n💡 Cached location: ${versionCacheDir}`);
-    console.log(
-      '   This version will be reused on subsequent runs (no re-download needed)'
-    );
+    console.log('   This version will be reused on subsequent runs (no re-download needed)');
   } catch (error: any) {
     console.error('\n❌ Test failed:', error.message);
     if (error.stack) {
@@ -230,7 +221,7 @@ async function main() {
 }
 
 // Run main function
-(async () => {
+void (async () => {
   try {
     await main();
   } catch (error: any) {

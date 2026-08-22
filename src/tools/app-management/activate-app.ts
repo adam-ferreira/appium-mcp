@@ -1,54 +1,19 @@
-import { FastMCP } from 'fastmcp';
-import { getDriver } from '../../session-store.js';
-import { z } from 'zod';
-import { activateApp as _activateApp } from '../../command.js';
+import type {ContentResult} from 'fastmcp';
 
-export default function activateApp(server: FastMCP): void {
-  const activateAppSchema = z.object({
-    id: z.string().describe('The app id'),
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
-  });
+import {activateApp as _activateApp} from '../../command.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
 
-  server.addTool({
-    name: 'appium_activate_app',
-    description: 'Activate app by id',
-    parameters: activateAppSchema,
-    annotations: {
-      readOnlyHint: false,
-      openWorldHint: false,
-    },
-    execute: async (
-      args: { id: string; sessionId?: string },
-      _context: any
-    ): Promise<any> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
-      }
+export async function activate(id: string, sessionId?: string): Promise<ContentResult> {
+  const resolved = await resolveDriver(sessionId);
+  if (!resolved.ok) {
+    return resolved.result;
+  }
+  const {driver} = resolved;
 
-      try {
-        await _activateApp(driver, args.id);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `App ${args.id} activated correctly.`,
-            },
-          ],
-        };
-      } catch (err: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error activating the app ${args.id}: ${err.toString()}`,
-            },
-          ],
-        };
-      }
-    },
-  });
+  try {
+    await _activateApp(driver, id);
+    return textResult(`App ${id} activated correctly.`);
+  } catch (err: unknown) {
+    return errorResult(`Error activating the app ${id}: ${toolErrorMessage(err)}`);
+  }
 }

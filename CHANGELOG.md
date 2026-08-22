@@ -1,3 +1,869 @@
+## [1.92.5](https://github.com/appium/appium-mcp/compare/v1.92.4...v1.92.5) (2026-08-21)
+
+### Bug Fixes
+
+* **locator:** prefer accessibility id ([#490](https://github.com/appium/appium-mcp/issues/490)) ([026c016](https://github.com/appium/appium-mcp/commit/026c01612f316f860dcafb5b0b461c9ef1adb63a))
+
+## [1.92.4](https://github.com/appium/appium-mcp/compare/v1.92.3...v1.92.4) (2026-08-16)
+
+### Bug Fixes
+
+* **app-management:** surface app list failures instead of caching an empty list ([#489](https://github.com/appium/appium-mcp/issues/489)) ([f2d38a4](https://github.com/appium/appium-mcp/commit/f2d38a467ddd8845d8aed4908875066e0d2dea18))
+
+## [1.92.3](https://github.com/appium/appium-mcp/compare/v1.92.2...v1.92.3) (2026-08-15)
+
+### Bug Fixes
+
+* **app-management:** resolve app names against rehydrated sessions ([#488](https://github.com/appium/appium-mcp/issues/488)) ([f268e87](https://github.com/appium/appium-mcp/commit/f268e87ec871b7a39fee1553c2c652799d5210b8))
+
+## [1.92.2](https://github.com/appium/appium-mcp/compare/v1.92.1...v1.92.2) (2026-08-13)
+
+### Bug Fixes
+
+* list apps ([#487](https://github.com/appium/appium-mcp/issues/487)) ([469edb1](https://github.com/appium/appium-mcp/commit/469edb11a0a1b64aaaee5e5ca29361a357668950))
+
+## [1.92.1](https://github.com/appium/appium-mcp/compare/v1.92.0...v1.92.1) (2026-08-12)
+
+### Bug Fixes
+
+* **context:** surface driver errors instead of empty context list ([#485](https://github.com/appium/appium-mcp/issues/485)) ([0edcea8](https://github.com/appium/appium-mcp/commit/0edcea8989e7b835b38125172aa01efa70b6f319))
+
+## [1.92.0](https://github.com/appium/appium-mcp/compare/v1.91.0...v1.92.0) (2026-08-07)
+
+### Features
+
+* use xcrun simctl spawn uname to get the simulator architecture ([#484](https://github.com/appium/appium-mcp/issues/484)) ([33ffb8a](https://github.com/appium/appium-mcp/commit/33ffb8ae2c87631b341933916bdb5a45b8dcd44c))
+
+## [1.91.0](https://github.com/appium/appium-mcp/compare/v1.90.1...v1.91.0) (2026-07-31)
+
+### Features
+
+* avoid duplicate screenshot and locator UI payloads ([#478](https://github.com/appium/appium-mcp/issues/478)) ([562e84e](https://github.com/appium/appium-mcp/commit/562e84e58063d071bb46d9e1c2fe093b50f30a88))
+
+## [1.90.1](https://github.com/appium/appium-mcp/compare/v1.90.0...v1.90.1) (2026-07-29)
+
+### Miscellaneous Chores
+
+* tweak lint more ([90edd2d](https://github.com/appium/appium-mcp/commit/90edd2d065d55362b0dc8ce1ebada381d6003cae))
+
+## [1.90.0](https://github.com/appium/appium-mcp/compare/v1.89.0...v1.90.0) (2026-07-28)
+
+### Features
+
+* avoid duplicate page source UI payloads ([#477](https://github.com/appium/appium-mcp/issues/477)) ([b8370df](https://github.com/appium/appium-mcp/commit/b8370df42e6f6f46e043ba31b0935bede44465a3))
+
+## [1.89.0](https://github.com/appium/appium-mcp/compare/v1.88.5...v1.89.0) (2026-07-26)
+
+### Features
+
+* add payload-free tool result size telemetry ([#476](https://github.com/appium/appium-mcp/issues/476)) ([ca0262d](https://github.com/appium/appium-mcp/commit/ca0262d38a18747f08c1f08c94099c7b82150272))
+
+## [1.88.5](https://github.com/appium/appium-mcp/compare/v1.88.4...v1.88.5) (2026-07-26)
+
+### Performance Improvements
+
+* cap tool discovery at 45k characters ([#475](https://github.com/appium/appium-mcp/issues/475)) ([2624412](https://github.com/appium/appium-mcp/commit/2624412367e5a2e4cd5ababc15a9fb4c2ffc25c9))
+
+## [1.88.4](https://github.com/appium/appium-mcp/compare/v1.88.3...v1.88.4) (2026-07-25)
+
+### Miscellaneous Chores
+
+* migrate lint/format to appium's ones ([#474](https://github.com/appium/appium-mcp/issues/474)) ([2a25edc](https://github.com/appium/appium-mcp/commit/2a25edcd3d8f7b466ef3bad578850f89fe3f3b50))
+
+## [1.88.3](https://github.com/appium/appium-mcp/compare/v1.88.2...v1.88.3) (2026-07-25)
+
+## [1.88.2](https://github.com/appium/appium-mcp/compare/v1.88.1...v1.88.2) (2026-07-25)
+
+## [1.88.1](https://github.com/appium/appium-mcp/compare/v1.88.0...v1.88.1) (2026-07-25)
+
+## [1.88.0](https://github.com/appium/appium-mcp/compare/v1.87.10...v1.88.0) (2026-07-25)
+
+## [1.87.10](https://github.com/appium/appium-mcp/compare/v1.87.9...v1.87.10) (2026-07-25)
+
+## [1.87.9](https://github.com/appium/appium-mcp/compare/v1.87.8...v1.87.9) (2026-07-23)
+
+### Bug Fixes
+
+* make applesign optional ([#461](https://github.com/appium/appium-mcp/issues/461)) ([02bbb0f](https://github.com/appium/appium-mcp/commit/02bbb0feaf7a3cb7d5257597b521e3c6595c0bf5))
+
+## [1.87.8](https://github.com/appium/appium-mcp/compare/v1.87.7...v1.87.8) (2026-07-22)
+
+### Bug Fixes
+
+* **screenshot:** use resolveDriver for session rehydration parity ([#456](https://github.com/appium/appium-mcp/issues/456)) ([5bda643](https://github.com/appium/appium-mcp/commit/5bda643996bdba7116a2888e86991431cfa7ac60))
+
+## [1.87.7](https://github.com/appium/appium-mcp/compare/v1.87.6...v1.87.7) (2026-07-21)
+
+### Bug Fixes
+
+* **command:** re-throw swallowed remote errors for element click, rect, and screenshot ([#457](https://github.com/appium/appium-mcp/issues/457)) ([940e07e](https://github.com/appium/appium-mcp/commit/940e07e6032b0673e9bb3aa44e25976ab3e69dcf))
+
+## [1.87.6](https://github.com/appium/appium-mcp/compare/v1.87.5...v1.87.6) (2026-07-16)
+
+### Bug Fixes
+
+* **context:** pass sessionId to setCurrentContext ([#437](https://github.com/appium/appium-mcp/issues/437)) ([f7d4f3e](https://github.com/appium/appium-mcp/commit/f7d4f3ed909e2c38b42350c113d1de5cf2b260f3))
+
+## [1.87.5](https://github.com/appium/appium-mcp/compare/v1.87.4...v1.87.5) (2026-07-15)
+
+### Bug Fixes
+
+* limit the node version to not use 26 ([#455](https://github.com/appium/appium-mcp/issues/455)) ([52b2d1a](https://github.com/appium/appium-mcp/commit/52b2d1a63fb8eccf6aed4991aba87ea28c156bec))
+
+## [1.87.4](https://github.com/appium/appium-mcp/compare/v1.87.3...v1.87.4) (2026-07-11)
+
+### Bug Fixes
+
+* **alert:** use findElement in Android custom button lookup ([#449](https://github.com/appium/appium-mcp/issues/449)) ([98ead11](https://github.com/appium/appium-mcp/commit/98ead11de040340d74933e390ed7b594047605f1))
+
+## [1.87.3](https://github.com/appium/appium-mcp/compare/v1.87.2...v1.87.3) (2026-07-07)
+
+### Bug Fixes
+
+* **gestures:** use findElement in scroll_to_element visibility check ([#446](https://github.com/appium/appium-mcp/issues/446)) ([3d83ec0](https://github.com/appium/appium-mcp/commit/3d83ec0daa67da4f37f2f7b7696b4d5ea06546a7))
+
+## [1.87.2](https://github.com/appium/appium-mcp/compare/v1.87.1...v1.87.2) (2026-07-06)
+
+### Bug Fixes
+
+* keep FastMCP logs off stdio stdout ([#444](https://github.com/appium/appium-mcp/issues/444)) ([5b517bc](https://github.com/appium/appium-mcp/commit/5b517bc388eeddbe309ebea208d9cf73f801e51a))
+
+### Miscellaneous Chores
+
+* **deps:** bump @opentelemetry/exporter-trace-otlp-http ([#442](https://github.com/appium/appium-mcp/issues/442)) ([e2ea212](https://github.com/appium/appium-mcp/commit/e2ea212444f7bcc6addb6757dfdb50bcaedbecc9))
+
+## [1.87.1](https://github.com/appium/appium-mcp/compare/v1.87.0...v1.87.1) (2026-07-06)
+
+### Miscellaneous Chores
+
+* **deps:** bump @opentelemetry/sdk-node from 0.219.0 to 0.220.0 ([#443](https://github.com/appium/appium-mcp/issues/443)) ([ec36ce2](https://github.com/appium/appium-mcp/commit/ec36ce2c3adf84cd0af5acfe7dc6bae96616e28b))
+
+## [1.87.0](https://github.com/appium/appium-mcp/compare/v1.86.13...v1.87.0) (2026-07-02)
+
+### Features
+
+* **screenshot:** add returnRawBase64 param to return inline image ([#440](https://github.com/appium/appium-mcp/issues/440)) ([91c7aa2](https://github.com/appium/appium-mcp/commit/91c7aa2dbc970d9f869316072a1c63bb59bd4e95))
+
+## [1.86.13](https://github.com/appium/appium-mcp/compare/v1.86.12...v1.86.13) (2026-07-02)
+
+### Miscellaneous Chores
+
+* **deps:** bump appium-uiautomator2-driver from 7.6.2 to 8.0.0 ([#426](https://github.com/appium/appium-mcp/issues/426)) ([62e04d5](https://github.com/appium/appium-mcp/commit/62e04d5c5d3183fdf0be705b40720984e572faa4))
+
+## [1.86.12](https://github.com/appium/appium-mcp/compare/v1.86.11...v1.86.12) (2026-07-02)
+
+### Miscellaneous Chores
+
+* downgrade conventional-changelog-conventionalcommits to v9 ([#435](https://github.com/appium/appium-mcp/issues/435)) ([b2d330a](https://github.com/appium/appium-mcp/commit/b2d330abbe6fe73cc640cc06f3fff0c3a985e9c2))
+
+## [1.86.11](https://github.com/appium/appium-mcp/compare/v1.86.10...v1.86.11) (2026-07-01)
+
+### Bug Fixes
+
+* more escapes ([#433](https://github.com/appium/appium-mcp/issues/433)) ([f59cba1](https://github.com/appium/appium-mcp/commit/f59cba177484101ce0babc4bacd615de0987bdf9))
+
+## [1.86.10](https://github.com/appium/appium-mcp/compare/v1.86.9...v1.86.10) (2026-07-01)
+
+### Miscellaneous Chores
+
+* **prepare-ios-simulator:** create wdaBaseUrl ([#432](https://github.com/appium/appium-mcp/issues/432)) ([6c0e578](https://github.com/appium/appium-mcp/commit/6c0e578bbaec8210c52e649df5241677a0d2e68f))
+
+## [1.86.9](https://github.com/appium/appium-mcp/compare/v1.86.8...v1.86.9) (2026-06-30)
+
+### Bug Fixes
+
+* **session:** allow multiple sessions on simulator ([#430](https://github.com/appium/appium-mcp/issues/430)) ([aee9241](https://github.com/appium/appium-mcp/commit/aee92419351061245a3948c690f62a56036b8c9f))
+
+## [1.86.8](https://github.com/appium/appium-mcp/compare/v1.86.7...v1.86.8) (2026-06-30)
+
+### Bug Fixes
+
+* allow SSE version to handle unique ports ([#429](https://github.com/appium/appium-mcp/issues/429)) ([5acb2d6](https://github.com/appium/appium-mcp/commit/5acb2d6826ec86cfb335e1d2794f1eba67a5ad4f))
+
+## [1.86.7](https://github.com/appium/appium-mcp/compare/v1.86.6...v1.86.7) (2026-06-29)
+
+### Bug Fixes
+
+* remote no such element error code ([#424](https://github.com/appium/appium-mcp/issues/424)) ([51bf42c](https://github.com/appium/appium-mcp/commit/51bf42c056b8e9172a671421d5c36338b0d1eb52))
+
+## [1.86.6](https://github.com/appium/appium-mcp/compare/v1.86.5...v1.86.6) (2026-06-29)
+
+### Miscellaneous Chores
+
+* fix format ([#425](https://github.com/appium/appium-mcp/issues/425)) ([bdbe91d](https://github.com/appium/appium-mcp/commit/bdbe91db2f22998c56df3a4a8e57fc79167f44e5))
+
+## [1.86.5](https://github.com/appium/appium-mcp/compare/v1.86.4...v1.86.5) (2026-06-27)
+
+### Bug Fixes
+
+* use teen_process ([#423](https://github.com/appium/appium-mcp/issues/423)) ([90716e4](https://github.com/appium/appium-mcp/commit/90716e4256098fd3a234e6973bbdd5d66bdb6071))
+
+## [1.86.4](https://github.com/appium/appium-mcp/compare/v1.86.3...v1.86.4) (2026-06-22)
+
+### Bug Fixes
+
+* escape more ([#420](https://github.com/appium/appium-mcp/issues/420)) ([78acf26](https://github.com/appium/appium-mcp/commit/78acf260d62af82a83077d1d30a32e28a7714087))
+
+## [1.86.3](https://github.com/appium/appium-mcp/compare/v1.86.2...v1.86.3) (2026-06-20)
+
+### Miscellaneous Chores
+
+* use appium/support for file handling ([#419](https://github.com/appium/appium-mcp/issues/419)) ([8fb9660](https://github.com/appium/appium-mcp/commit/8fb96608f6cc312dd16233bd22ab82c96e530dce))
+
+## [1.86.2](https://github.com/appium/appium-mcp/compare/v1.86.1...v1.86.2) (2026-06-20)
+
+### Bug Fixes
+
+* **docs:** support global resolution of doc package ([#417](https://github.com/appium/appium-mcp/issues/417)) ([dfeea2f](https://github.com/appium/appium-mcp/commit/dfeea2ffe16389d57b1cec0c95ddfed30c3c6dfa))
+
+## [1.86.1](https://github.com/appium/appium-mcp/compare/v1.86.0...v1.86.1) (2026-06-19)
+
+### Miscellaneous Chores
+
+* **deps-dev:** bump @types/node from 25.9.4 to 26.0.0 ([#416](https://github.com/appium/appium-mcp/issues/416)) ([00bcac5](https://github.com/appium/appium-mcp/commit/00bcac51f50025f1bc4fa71d80c6915eb11cdf13))
+
+## [1.86.0](https://github.com/appium/appium-mcp/compare/v1.85.10...v1.86.0) (2026-06-19)
+
+### Features
+
+* **docs:** make documentation plugin optional with opt-in config ([#413](https://github.com/appium/appium-mcp/issues/413)) ([21d709f](https://github.com/appium/appium-mcp/commit/21d709fb285ece5633484775b2fca354b2a80063))
+
+## [1.85.10](https://github.com/appium/appium-mcp/compare/v1.85.9...v1.85.10) (2026-06-18)
+
+### Bug Fixes
+
+* add escape for ui ([#411](https://github.com/appium/appium-mcp/issues/411)) ([e222bbb](https://github.com/appium/appium-mcp/commit/e222bbbd6fe2b656a320efcd143563f08061a83d))
+
+## [1.85.9](https://github.com/appium/appium-mcp/compare/v1.85.8...v1.85.9) (2026-06-18)
+
+### Bug Fixes
+
+* **session:** local Android create when multiple devices unselected ([#410](https://github.com/appium/appium-mcp/issues/410)) ([9fb5bc3](https://github.com/appium/appium-mcp/commit/9fb5bc3fc9816ae6ab9a472b4eeada2f267fdf41))
+
+## [1.85.8](https://github.com/appium/appium-mcp/compare/v1.85.7...v1.85.8) (2026-06-17)
+
+### Bug Fixes
+
+* require session id to get persistent session ([#409](https://github.com/appium/appium-mcp/issues/409)) ([f224459](https://github.com/appium/appium-mcp/commit/f224459cf6b8774927236d5ce3cf07a819241766))
+
+## [1.85.7](https://github.com/appium/appium-mcp/compare/v1.85.6...v1.85.7) (2026-06-16)
+
+### Miscellaneous Chores
+
+* **otel:** add OTEL_RESOURCE_ATTRIBUTES env ([#408](https://github.com/appium/appium-mcp/issues/408)) ([d4cbbfb](https://github.com/appium/appium-mcp/commit/d4cbbfbbefd7520853d8fd2e58e6fe6e4a8628e9))
+
+### Code Refactoring
+
+* store local selected device as one class ([#406](https://github.com/appium/appium-mcp/issues/406)) ([a44107e](https://github.com/appium/appium-mcp/commit/a44107e144d6c8221515689913d52e6f492b63a6))
+
+## [1.85.6](https://github.com/appium/appium-mcp/compare/v1.85.5...v1.85.6) (2026-06-14)
+
+### Miscellaneous Chores
+
+* make telemetry deps optional ([#405](https://github.com/appium/appium-mcp/issues/405)) ([7607832](https://github.com/appium/appium-mcp/commit/7607832495c7e3b99e2de0a9f6e2a56ba9d2dd39))
+
+## [1.85.5](https://github.com/appium/appium-mcp/compare/v1.85.4...v1.85.5) (2026-06-13)
+
+### Bug Fixes
+
+* **session:** reject local create when platform mismatches select_device ([#391](https://github.com/appium/appium-mcp/issues/391)) ([d86c4b7](https://github.com/appium/appium-mcp/commit/d86c4b70d4cf3e0e741976885c751217ac4bd906))
+
+## [1.85.4](https://github.com/appium/appium-mcp/compare/v1.85.3...v1.85.4) (2026-06-12)
+
+### Miscellaneous Chores
+
+* **deps:** bump @opentelemetry/exporter-trace-otlp-http ([#402](https://github.com/appium/appium-mcp/issues/402)) ([9bf7734](https://github.com/appium/appium-mcp/commit/9bf773482a79b95d10b7aa24bd62e4859532218f))
+
+## [1.85.3](https://github.com/appium/appium-mcp/compare/v1.85.2...v1.85.3) (2026-06-12)
+
+### Miscellaneous Chores
+
+* **deps:** bump @opentelemetry/sdk-node from 0.218.0 to 0.219.0 ([#403](https://github.com/appium/appium-mcp/issues/403)) ([0b04a47](https://github.com/appium/appium-mcp/commit/0b04a47cae8827ec468646092ec89138446f3b2f))
+
+## [1.85.2](https://github.com/appium/appium-mcp/compare/v1.85.1...v1.85.2) (2026-06-12)
+
+### Miscellaneous Chores
+
+* **tools:** add exported tools name test ([#399](https://github.com/appium/appium-mcp/issues/399)) ([4547d66](https://github.com/appium/appium-mcp/commit/4547d660c0846c5df9b0d157d43ff6429686bde7))
+
+## [1.85.1](https://github.com/appium/appium-mcp/compare/v1.85.0...v1.85.1) (2026-06-11)
+
+### Bug Fixes
+
+* **session:** return error on invalid capabilities JSON ([#397](https://github.com/appium/appium-mcp/issues/397)) ([c1be520](https://github.com/appium/appium-mcp/commit/c1be520ca463f9d5ff0ce60c70a0095585f4ce5d))
+
+## [1.85.0](https://github.com/appium/appium-mcp/compare/v1.84.2...v1.85.0) (2026-06-11)
+
+### Features
+
+* add OpenTelemetry feature ([#385](https://github.com/appium/appium-mcp/issues/385)) ([99dee60](https://github.com/appium/appium-mcp/commit/99dee60e81491020cb7b03ed811629a4a955eeb8))
+
+### Miscellaneous Chores
+
+* **release:** 1.85.0 [skip ci] ([22d7957](https://github.com/appium/appium-mcp/commit/22d79570be7f5e8ea36dec302c21445823495e02))
+
+## [1.84.2](https://github.com/appium/appium-mcp/compare/v1.84.1...v1.84.2) (2026-06-09)
+
+### Bug Fixes
+
+* **find:** surface remote "no such element" as a thrown not-found ([#392](https://github.com/appium/appium-mcp/issues/392)) ([254663c](https://github.com/appium/appium-mcp/commit/254663cff45a9e74c38327b89b87d918970ff28e))
+
+## [1.84.1](https://github.com/appium/appium-mcp/compare/v1.84.0...v1.84.1) (2026-06-09)
+
+### Miscellaneous Chores
+
+* drop dist/tests from package as well ([#393](https://github.com/appium/appium-mcp/issues/393)) ([6ff2d8e](https://github.com/appium/appium-mcp/commit/6ff2d8e061c2b0a1fbfa11db8dbc885359280e64))
+
+## [1.84.0](https://github.com/appium/appium-mcp/compare/v1.83.0...v1.84.0) (2026-06-08)
+
+### Features
+
+* extratc docs stuff into a new package ([#384](https://github.com/appium/appium-mcp/issues/384)) ([1daddb3](https://github.com/appium/appium-mcp/commit/1daddb3563d4f646e924623889db5b8b3eab7ce9))
+
+## [1.83.0](https://github.com/appium/appium-mcp/compare/v1.82.2...v1.83.0) (2026-06-08)
+
+### Features
+
+* emit structured action evidence records ([#386](https://github.com/appium/appium-mcp/issues/386)) ([d42593e](https://github.com/appium/appium-mcp/commit/d42593e86c0bb6535b4e1c3e855c6d7e307e9611))
+
+## [1.82.2](https://github.com/appium/appium-mcp/compare/v1.82.1...v1.82.2) (2026-06-08)
+
+### Miscellaneous Chores
+
+* define driver mode platform ([#388](https://github.com/appium/appium-mcp/issues/388)) ([a86b5ee](https://github.com/appium/appium-mcp/commit/a86b5ee0530fa0b60f27d5ad5121b4e4b6a9be6c))
+
+## [1.82.1](https://github.com/appium/appium-mcp/compare/v1.82.0...v1.82.1) (2026-06-03)
+
+### Miscellaneous Chores
+
+* refactor documentation part as a plugin style ([#376](https://github.com/appium/appium-mcp/issues/376)) ([42ab1ed](https://github.com/appium/appium-mcp/commit/42ab1edb3d3e7ab4564f7930112dad9554a4d117))
+
+## [1.82.0](https://github.com/appium/appium-mcp/compare/v1.81.7...v1.82.0) (2026-06-02)
+
+### Features
+
+* **attach-session:** fetch capabilities automatically from server when attaching sessions ([#380](https://github.com/appium/appium-mcp/issues/380)) ([69934b0](https://github.com/appium/appium-mcp/commit/69934b0b3893fa9bc05cadfe6a41b9018679e89e))
+
+## [1.81.7](https://github.com/appium/appium-mcp/compare/v1.81.6...v1.81.7) (2026-06-02)
+
+### Bug Fixes
+
+* some minor issues ([#378](https://github.com/appium/appium-mcp/issues/378)) ([4068a7a](https://github.com/appium/appium-mcp/commit/4068a7a492d6ea0af1a1b5b509b6a6215f659ad1))
+
+## [1.81.6](https://github.com/appium/appium-mcp/compare/v1.81.5...v1.81.6) (2026-06-02)
+
+### Bug Fixes
+
+* lint ([#381](https://github.com/appium/appium-mcp/issues/381)) ([f4422d2](https://github.com/appium/appium-mcp/commit/f4422d2e7b502374577b84052090d2b67723ba5f))
+
+## [1.81.5](https://github.com/appium/appium-mcp/compare/v1.81.4...v1.81.5) (2026-06-02)
+
+### Bug Fixes
+
+* **session:** return errorResult from select_device and session create failures ([#377](https://github.com/appium/appium-mcp/issues/377)) ([7c5c6f9](https://github.com/appium/appium-mcp/commit/7c5c6f9c302482bda1b64f29888f83f4583c6811))
+
+## [1.81.4](https://github.com/appium/appium-mcp/compare/v1.81.3...v1.81.4) (2026-05-30)
+
+### Bug Fixes
+
+* addTool argument format in plugin ([#375](https://github.com/appium/appium-mcp/issues/375)) ([2dee443](https://github.com/appium/appium-mcp/commit/2dee443bf30741dc2756846ef30809afb0c2ea0b))
+
+## [1.81.3](https://github.com/appium/appium-mcp/compare/v1.81.2...v1.81.3) (2026-05-30)
+
+### Bug Fixes
+
+* correct the order of plugins ([#374](https://github.com/appium/appium-mcp/issues/374)) ([394da39](https://github.com/appium/appium-mcp/commit/394da39b55669512acd3ec6b3aaa88025758d9f3))
+
+## [1.81.2](https://github.com/appium/appium-mcp/compare/v1.81.1...v1.81.2) (2026-05-30)
+
+### Miscellaneous Chores
+
+* set strict for the tsconfig ([#338](https://github.com/appium/appium-mcp/issues/338)) ([4632004](https://github.com/appium/appium-mcp/commit/4632004bffdd7bbca78fc15d34cab232576a5e36))
+
+## [1.81.1](https://github.com/appium/appium-mcp/compare/v1.81.0...v1.81.1) (2026-05-29)
+
+### Bug Fixes
+
+* fix potential before/after hook issue, correct documentation ([#373](https://github.com/appium/appium-mcp/issues/373)) ([16a1ad0](https://github.com/appium/appium-mcp/commit/16a1ad0f88e52c936bf7fb41adfdc0ed9fc8f051))
+
+## [1.81.0](https://github.com/appium/appium-mcp/compare/v1.80.0...v1.81.0) (2026-05-29)
+
+### Features
+
+* add lightweight allowlist policy ([#369](https://github.com/appium/appium-mcp/issues/369)) ([2a52174](https://github.com/appium/appium-mcp/commit/2a52174cea59d02333c0af86cf3faa5a4ccf8715))
+
+## [1.80.0](https://github.com/appium/appium-mcp/compare/v1.79.1...v1.80.0) (2026-05-28)
+
+### Features
+
+* **rag:** update evals to use answer spans ([#371](https://github.com/appium/appium-mcp/issues/371)) ([e59ea55](https://github.com/appium/appium-mcp/commit/e59ea5597eff268021bb588312931a5d8ceef090))
+
+## [1.79.1](https://github.com/appium/appium-mcp/compare/v1.79.0...v1.79.1) (2026-05-28)
+
+### Bug Fixes
+
+* **gestures:** support ai-element UUIDs in drag and drop ([#339](https://github.com/appium/appium-mcp/issues/339)) ([de91697](https://github.com/appium/appium-mcp/commit/de916975c4315135c147a189545db4b617694d5b))
+
+## [1.79.0](https://github.com/appium/appium-mcp/compare/v1.78.1...v1.79.0) (2026-05-27)
+
+### Features
+
+* **rag:** implement header-aware hybrid splitter for Markdown documents ([#367](https://github.com/appium/appium-mcp/issues/367)) ([ea34007](https://github.com/appium/appium-mcp/commit/ea34007442d8528b36e46d56f75d14d950a7f137))
+
+## [1.78.1](https://github.com/appium/appium-mcp/compare/v1.78.0...v1.78.1) (2026-05-27)
+
+### Bug Fixes
+
+* **select-device:** instruct to use real device preparation tool ([#368](https://github.com/appium/appium-mcp/issues/368)) ([45e489f](https://github.com/appium/appium-mcp/commit/45e489f03799a457248ddda379d6bf5989c839fc))
+
+## [1.78.0](https://github.com/appium/appium-mcp/compare/v1.77.0...v1.78.0) (2026-05-26)
+
+### Features
+
+* add plugin names/tool names verification cli ([#366](https://github.com/appium/appium-mcp/issues/366)) ([3ad1016](https://github.com/appium/appium-mcp/commit/3ad10163b2083b6346a27ba8b38adf6619c08b03))
+
+## [1.77.0](https://github.com/appium/appium-mcp/compare/v1.76.0...v1.77.0) (2026-05-26)
+
+### Features
+
+* add initial plugin support ([#352](https://github.com/appium/appium-mcp/issues/352)) ([5551ca4](https://github.com/appium/appium-mcp/commit/5551ca46012900968a129eb44bfe92d348db60eb))
+
+## [1.76.0](https://github.com/appium/appium-mcp/compare/v1.75.7...v1.76.0) (2026-05-25)
+
+### Features
+
+* **session:** persist remote sessions and auto-rehydrate on cache with APPIUM_MCP_PERSIST_REMOTE_SESSIONS_PATH ([#349](https://github.com/appium/appium-mcp/issues/349)) ([81c605e](https://github.com/appium/appium-mcp/commit/81c605eb848aeda7f3813b003c2acf7376dfba85)), closes [#9](https://github.com/appium/appium-mcp/issues/9) [#4](https://github.com/appium/appium-mcp/issues/4) [#5](https://github.com/appium/appium-mcp/issues/5) [#7](https://github.com/appium/appium-mcp/issues/7) [#1](https://github.com/appium/appium-mcp/issues/1) [#2](https://github.com/appium/appium-mcp/issues/2) [#3](https://github.com/appium/appium-mcp/issues/3) [#6](https://github.com/appium/appium-mcp/issues/6)
+
+## [1.75.7](https://github.com/appium/appium-mcp/compare/v1.75.6...v1.75.7) (2026-05-23)
+
+### Bug Fixes
+
+* apply npm pkg fix to tweak package.json ([#362](https://github.com/appium/appium-mcp/issues/362)) ([412cae1](https://github.com/appium/appium-mcp/commit/412cae1f722d64ee3b73a2f3f050e022607fe0c1))
+
+## [1.75.6](https://github.com/appium/appium-mcp/compare/v1.75.5...v1.75.6) (2026-05-23)
+
+### Bug Fixes
+
+* **interactions:** reject ai-element tokens in get and set tools ([#358](https://github.com/appium/appium-mcp/issues/358)) ([ac630a3](https://github.com/appium/appium-mcp/commit/ac630a3881bc58e262bac73e8fc687e13e57c286))
+
+## [1.75.5](https://github.com/appium/appium-mcp/compare/v1.75.4...v1.75.5) (2026-05-23)
+
+### Bug Fixes
+
+* **gestures:** clamp direction gestures to window for ai-element targets ([#350](https://github.com/appium/appium-mcp/issues/350)) ([6f8db0b](https://github.com/appium/appium-mcp/commit/6f8db0bfa1462b8e54757d154b951425b8e8fbdd))
+
+## [1.75.4](https://github.com/appium/appium-mcp/compare/v1.75.3...v1.75.4) (2026-05-23)
+
+### Miscellaneous Chores
+
+* **deps:** bump appium-adb from 14.6.1 to 15.0.0 ([#356](https://github.com/appium/appium-mcp/issues/356)) ([5685814](https://github.com/appium/appium-mcp/commit/5685814b59deff79d020f4a2ff09e256fa334c7d))
+
+## [1.75.3](https://github.com/appium/appium-mcp/compare/v1.75.2...v1.75.3) (2026-05-23)
+
+### Bug Fixes
+
+* **interactions:** mark appium_get_text as read-only ([#359](https://github.com/appium/appium-mcp/issues/359)) ([089b9f2](https://github.com/appium/appium-mcp/commit/089b9f2ac8ab145e2f0826dd5404491226084f69))
+
+## [1.75.2](https://github.com/appium/appium-mcp/compare/v1.75.1...v1.75.2) (2026-05-19)
+
+### Bug Fixes
+
+* add appId for Android in queryAppState ([#347](https://github.com/appium/appium-mcp/issues/347)) ([8530d13](https://github.com/appium/appium-mcp/commit/8530d1342dfcd80fe9bfc9b4eebf7afa290f015b))
+
+## [1.75.1](https://github.com/appium/appium-mcp/compare/v1.75.0...v1.75.1) (2026-05-19)
+
+### Bug Fixes
+
+* confusing result message ([#346](https://github.com/appium/appium-mcp/issues/346)) ([201e285](https://github.com/appium/appium-mcp/commit/201e285f7828c0132cd591e5a28815000c9a92ae))
+
+## [1.75.0](https://github.com/appium/appium-mcp/compare/v1.74.3...v1.75.0) (2026-05-19)
+
+### Features
+
+* add back action ([#337](https://github.com/appium/appium-mcp/issues/337)) ([464f935](https://github.com/appium/appium-mcp/commit/464f935f3c1429b59977588100bbcb5eabbe3ad0))
+
+## [1.74.3](https://github.com/appium/appium-mcp/compare/v1.74.2...v1.74.3) (2026-05-17)
+
+### Bug Fixes
+
+* **gestures:** handle appium_ai coordinate UUIDs in all gesture handlers ([#321](https://github.com/appium/appium-mcp/issues/321)) ([1f3714d](https://github.com/appium/appium-mcp/commit/1f3714de4856a83ba4a7d9e04f82068cbf90351f))
+
+## [1.74.2](https://github.com/appium/appium-mcp/compare/v1.74.1...v1.74.2) (2026-05-16)
+
+### Bug Fixes
+
+* **app-management:** use resolveDriver and errorResult for lifecycle tools ([#328](https://github.com/appium/appium-mcp/issues/328)) ([b1091d9](https://github.com/appium/appium-mcp/commit/b1091d96020e5437afb147d5c2e52ce4c93b0285))
+
+## [1.74.1](https://github.com/appium/appium-mcp/compare/v1.74.0...v1.74.1) (2026-05-16)
+
+### Bug Fixes
+
+* lint ([#336](https://github.com/appium/appium-mcp/issues/336)) ([0713701](https://github.com/appium/appium-mcp/commit/07137018677e75a6bbf9242fdd6371005a44f894))
+
+## [1.74.0](https://github.com/appium/appium-mcp/compare/v1.73.0...v1.74.0) (2026-05-16)
+
+### Features
+
+* **embeddings:** cache vector embeddings and ship warm cache ([#335](https://github.com/appium/appium-mcp/issues/335)) ([52c8fd3](https://github.com/appium/appium-mcp/commit/52c8fd326a7e67f2769a10e00c9c5516bd86e0bf))
+
+## [1.73.0](https://github.com/appium/appium-mcp/compare/v1.72.16...v1.73.0) (2026-05-14)
+
+### Features
+
+* **rag:** upgrade to BGE-small-v1.5 + add retrieval eval harness ([#334](https://github.com/appium/appium-mcp/issues/334)) ([bcfe254](https://github.com/appium/appium-mcp/commit/bcfe2542e2f270d0a2fe314c64e7c54e752933ff))
+
+## [1.72.16](https://github.com/appium/appium-mcp/compare/v1.72.15...v1.72.16) (2026-05-14)
+
+### Bug Fixes
+
+* **ai:** enforce find_element instruction via Zod schema ([#329](https://github.com/appium/appium-mcp/issues/329)) ([a3bfe83](https://github.com/appium/appium-mcp/commit/a3bfe83576c6be9ec1ffa9371ab67b44cc86cc80))
+
+## [1.72.15](https://github.com/appium/appium-mcp/compare/v1.72.14...v1.72.15) (2026-05-14)
+
+### Bug Fixes
+
+* **app-management:** surface resolve by name failures in app lifecycle ([#332](https://github.com/appium/appium-mcp/issues/332)) ([85fe2b9](https://github.com/appium/appium-mcp/commit/85fe2b9de2e42165786813332146fc0c77bbe362))
+
+## [1.72.14](https://github.com/appium/appium-mcp/compare/v1.72.13...v1.72.14) (2026-05-09)
+
+### Miscellaneous Chores
+
+* tune the default caps ([#327](https://github.com/appium/appium-mcp/issues/327)) ([1722f58](https://github.com/appium/appium-mcp/commit/1722f58e2ecdc54506a2db768e8f9fffaecb0790))
+
+## [1.72.13](https://github.com/appium/appium-mcp/compare/v1.72.12...v1.72.13) (2026-05-08)
+
+### Bug Fixes
+
+* **session:** point stale create_session prompts to appium_session_management ([#326](https://github.com/appium/appium-mcp/issues/326)) ([9e520fe](https://github.com/appium/appium-mcp/commit/9e520fe0af6271a2ebe6fd45343a15d163b041c0))
+
+## [1.72.12](https://github.com/appium/appium-mcp/compare/v1.72.11...v1.72.12) (2026-05-07)
+
+### Miscellaneous Chores
+
+* **lint:** fix preserve-caught-error and type-only imports across src/ ([#325](https://github.com/appium/appium-mcp/issues/325)) ([b543f6a](https://github.com/appium/appium-mcp/commit/b543f6afb8a07ccc0fb23e94b99b51d7aa695f07))
+
+## [1.72.11](https://github.com/appium/appium-mcp/compare/v1.72.10...v1.72.11) (2026-05-06)
+
+### Bug Fixes
+
+* **find-element:** steer ai locators to appium_ai ([#317](https://github.com/appium/appium-mcp/issues/317)) ([818bc18](https://github.com/appium/appium-mcp/commit/818bc18d1ab5e3fd52522fe6fe31fb6d5dc40fec))
+
+## [1.72.10](https://github.com/appium/appium-mcp/compare/v1.72.9...v1.72.10) (2026-05-06)
+
+### Miscellaneous Chores
+
+* **deps-dev:** bump lint-staged from 16.4.0 to 17.0.2 ([#324](https://github.com/appium/appium-mcp/issues/324)) ([e14de8c](https://github.com/appium/appium-mcp/commit/e14de8cc600d5715418dc2fcd86aee1bc67dedce))
+
+## [1.72.9](https://github.com/appium/appium-mcp/compare/v1.72.8...v1.72.9) (2026-05-06)
+
+### Miscellaneous Chores
+
+* bump version to 1.72.9 ([#323](https://github.com/appium/appium-mcp/issues/323)) ([0bee97b](https://github.com/appium/appium-mcp/commit/0bee97b8e376cb1918c8fef07561a29f6041fd36))
+
+## [1.72.8](https://github.com/appium/appium-mcp/compare/v1.72.7...v1.72.8) (2026-05-05)
+
+### Miscellaneous Chores
+
+* **all:** use textResult and errorResult where required  ([#319](https://github.com/appium/appium-mcp/issues/319)) ([2a82231](https://github.com/appium/appium-mcp/commit/2a822310c84b24c22dbbc3f044a4e64d09a6db1b))
+
+## [1.72.7](https://github.com/appium/appium-mcp/compare/v1.72.6...v1.72.7) (2026-05-05)
+
+### Miscellaneous Chores
+
+* remove lodash ([#320](https://github.com/appium/appium-mcp/issues/320)) ([9a82237](https://github.com/appium/appium-mcp/commit/9a822379d333cf94d47b2f1f9dc9e1b83e03b982))
+
+## [1.72.6](https://github.com/appium/appium-mcp/compare/v1.72.5...v1.72.6) (2026-05-04)
+
+### Bug Fixes
+
+* **session:** improve capabilities handling for wider LLMs ([#316](https://github.com/appium/appium-mcp/issues/316)) ([c18f35d](https://github.com/appium/appium-mcp/commit/c18f35d33de4580538a5e02d489e50ce4b79577e))
+
+## [1.72.5](https://github.com/appium/appium-mcp/compare/v1.72.4...v1.72.5) (2026-05-03)
+
+### Miscellaneous Chores
+
+* **tool-response:** align "no active session" error with appium_session_management ([#318](https://github.com/appium/appium-mcp/issues/318)) ([880a787](https://github.com/appium/appium-mcp/commit/880a787f236ba8394376f02d506f9760e3d329f5))
+
+## [1.72.4](https://github.com/appium/appium-mcp/compare/v1.72.3...v1.72.4) (2026-05-02)
+
+### Miscellaneous Chores
+
+* **server:** expand MCP instructions and sync FastMCP version ([#313](https://github.com/appium/appium-mcp/issues/313)) ([5bec5df](https://github.com/appium/appium-mcp/commit/5bec5df45deb8e157a0b534f22788ee2cdffe946))
+
+## [1.72.3](https://github.com/appium/appium-mcp/compare/v1.72.2...v1.72.3) (2026-05-02)
+
+### Bug Fixes
+
+* **scroll:** flip scroll for android ([#312](https://github.com/appium/appium-mcp/issues/312)) ([e0708f7](https://github.com/appium/appium-mcp/commit/e0708f7f2463f3f92b9abb2404ee9322f289a47a))
+
+## [1.72.2](https://github.com/appium/appium-mcp/compare/v1.72.1...v1.72.2) (2026-05-02)
+
+### Bug Fixes
+
+* **prepare-ios-real-device:** enhance handling of wildcard provisioning profiles and improve signing process ([#315](https://github.com/appium/appium-mcp/issues/315)) ([404e715](https://github.com/appium/appium-mcp/commit/404e71598906899a16df5bce26954bbddcff87bb))
+
+## [1.72.1](https://github.com/appium/appium-mcp/compare/v1.72.0...v1.72.1) (2026-05-01)
+
+### Bug Fixes
+
+* **find-elements:** gate ai instructions behind a config env ([#309](https://github.com/appium/appium-mcp/issues/309)) ([07f1b22](https://github.com/appium/appium-mcp/commit/07f1b22d070c8c541df887ef6502c36e70f307c3))
+
+## [1.72.0](https://github.com/appium/appium-mcp/compare/v1.71.6...v1.72.0) (2026-05-01)
+
+### Features
+
+* add APPIUM_MCP_ON_CLIENT_DISCONNECT toggle ([#306](https://github.com/appium/appium-mcp/issues/306)) ([b77cae4](https://github.com/appium/appium-mcp/commit/b77cae4fe6753599f4c04cfedbb6e1b362c23ed2))
+
+## [1.71.6](https://github.com/appium/appium-mcp/compare/v1.71.5...v1.71.6) (2026-05-01)
+
+### Bug Fixes
+
+* add actions api to the java template ([#310](https://github.com/appium/appium-mcp/issues/310)) ([caebdd4](https://github.com/appium/appium-mcp/commit/caebdd41d21a51dbfaaa790952e2fc9ccc1e0c77))
+
+## [1.71.5](https://github.com/appium/appium-mcp/compare/v1.71.4...v1.71.5) (2026-04-30)
+
+### Bug Fixes
+
+* enhance driver type checks for session validation ([#304](https://github.com/appium/appium-mcp/issues/304)) ([a6d60b4](https://github.com/appium/appium-mcp/commit/a6d60b43b11b0d90504aec74a1fbbc541ee6f019))
+
+## [1.71.4](https://github.com/appium/appium-mcp/compare/v1.71.3...v1.71.4) (2026-04-30)
+
+### Bug Fixes
+
+* click for session ([#303](https://github.com/appium/appium-mcp/issues/303)) ([55e0bd6](https://github.com/appium/appium-mcp/commit/55e0bd6f5bdcb9540ac83c9e62128f25d52450bb))
+
+## [1.71.3](https://github.com/appium/appium-mcp/compare/v1.71.2...v1.71.3) (2026-04-30)
+
+### Miscellaneous Chores
+
+* update appium-skills ([#302](https://github.com/appium/appium-mcp/issues/302)) ([3b5bc71](https://github.com/appium/appium-mcp/commit/3b5bc714676be106cf1dec7a9cb25851504974cb))
+
+## [1.71.2](https://github.com/appium/appium-mcp/compare/v1.71.1...v1.71.2) (2026-04-30)
+
+### Bug Fixes
+
+* fix lint more ([#301](https://github.com/appium/appium-mcp/issues/301)) ([f10f8c0](https://github.com/appium/appium-mcp/commit/f10f8c0b449a93ad71c64e466ad31eb5f2d3ed46))
+
+## [1.71.1](https://github.com/appium/appium-mcp/compare/v1.71.0...v1.71.1) (2026-04-30)
+
+### Bug Fixes
+
+* use arguments[0].click() for iOS WebView ([#211](https://github.com/appium/appium-mcp/issues/211)) ([e806985](https://github.com/appium/appium-mcp/commit/e8069856bd5e901b7df38a1bcd2eaa086fe77b69))
+
+## [1.71.0](https://github.com/appium/appium-mcp/compare/v1.70.0...v1.71.0) (2026-04-30)
+
+### Features
+
+* **session:** add attach/detach support with owned/attached session … ([#287](https://github.com/appium/appium-mcp/issues/287)) ([d52e1bf](https://github.com/appium/appium-mcp/commit/d52e1bfc2b6b2181cda9190f3a51dadc37277b42)), closes [#274](https://github.com/appium/appium-mcp/issues/274)
+
+## [1.70.0](https://github.com/appium/appium-mcp/compare/v1.69.1...v1.70.0) (2026-04-29)
+
+### Features
+
+* **tools:** single appium_mobile_keyboard tool ([#293](https://github.com/appium/appium-mcp/issues/293)) ([1214950](https://github.com/appium/appium-mcp/commit/1214950819b1b9edc4c73c9ea2ebc120da91ad7b))
+
+## [1.69.1](https://github.com/appium/appium-mcp/compare/v1.69.0...v1.69.1) (2026-04-29)
+
+### Bug Fixes
+
+* apply lint:fix ([#300](https://github.com/appium/appium-mcp/issues/300)) ([f65ee47](https://github.com/appium/appium-mcp/commit/f65ee470ff51e945c5f07c50e9953a4c7f6aa2d4))
+
+## [1.69.0](https://github.com/appium/appium-mcp/compare/v1.68.0...v1.69.0) (2026-04-29)
+
+### Features
+
+* **ios:** add `appium_prepare_ios_real_device` tool ([#297](https://github.com/appium/appium-mcp/issues/297)) ([998c6a1](https://github.com/appium/appium-mcp/commit/998c6a16c988779f2b76ea92433ef59469ac9051))
+
+## [1.68.0](https://github.com/appium/appium-mcp/compare/v1.67.1...v1.68.0) (2026-04-29)
+
+### Features
+
+* **tools:** single appium_mobile_clipboard tool ([#292](https://github.com/appium/appium-mcp/issues/292)) ([ce7c7dc](https://github.com/appium/appium-mcp/commit/ce7c7dc6e20f0dd43b0ebf3f56651065af55fa8c))
+
+### Bug Fixes
+
+* loading mcp server to start ([#298](https://github.com/appium/appium-mcp/issues/298)) ([82414d6](https://github.com/appium/appium-mcp/commit/82414d6dbec351887758aae9414ac9adfc4de22d))
+
+## [1.67.1](https://github.com/appium/appium-mcp/compare/v1.67.0...v1.67.1) (2026-04-27)
+
+### Bug Fixes
+
+* support zoom in/out via custom coords ([#291](https://github.com/appium/appium-mcp/issues/291)) ([251e144](https://github.com/appium/appium-mcp/commit/251e144f9a21ca0909df93ba52bc8b748e4e20b4))
+
+## [1.67.0](https://github.com/appium/appium-mcp/compare/v1.66.0...v1.67.0) (2026-04-23)
+
+### Features
+
+* scroll-until-found for appium_find_element ([#277](https://github.com/appium/appium-mcp/issues/277)) ([f69eb71](https://github.com/appium/appium-mcp/commit/f69eb71f959d550d01619ec79fc832aa3f81a4db))
+
+## [1.66.0](https://github.com/appium/appium-mcp/compare/v1.65.0...v1.66.0) (2026-04-23)
+
+### Features
+
+* **tools:** structured logs, toolErrorMessage, canonical elementId line ([#282](https://github.com/appium/appium-mcp/issues/282)) ([4f73519](https://github.com/appium/appium-mcp/commit/4f73519315b4dea1850633db80701ef80113407c))
+
+## [1.65.0](https://github.com/appium/appium-mcp/compare/v1.64.0...v1.65.0) (2026-04-23)
+
+### Features
+
+* **tools:** consolidate driver settings into appium_driver_settings ([#284](https://github.com/appium/appium-mcp/issues/284)) ([65e5dcd](https://github.com/appium/appium-mcp/commit/65e5dcd49412c73a85f5b5794ade47b84647560c))
+
+## [1.64.0](https://github.com/appium/appium-mcp/compare/v1.63.1...v1.64.0) (2026-04-23)
+
+### Features
+
+* **session:** consolidate session tools ([#283](https://github.com/appium/appium-mcp/issues/283)) ([edc252e](https://github.com/appium/appium-mcp/commit/edc252e6cab5786cf394d47cf6f9bb06d310bd5b))
+
+## [1.63.1](https://github.com/appium/appium-mcp/compare/v1.63.0...v1.63.1) (2026-04-22)
+
+### Miscellaneous Chores
+
+* **docs:** add env var section in configuration ([#285](https://github.com/appium/appium-mcp/issues/285)) ([fa6f483](https://github.com/appium/appium-mcp/commit/fa6f483682873bd6499ffd112504cc417337f298))
+
+## [1.63.0](https://github.com/appium/appium-mcp/compare/v1.62.0...v1.63.0) (2026-04-22)
+
+### Features
+
+* **ios:** use GH permalink for WDA download; support `APPIUM_MCP_WDA_APP_PATH` override ([#281](https://github.com/appium/appium-mcp/issues/281)) ([c4c32bc](https://github.com/appium/appium-mcp/commit/c4c32bc210cdf16df2b426b9f65633d1c5085496))
+
+## [1.62.0](https://github.com/appium/appium-mcp/compare/v1.61.0...v1.62.0) (2026-04-22)
+
+### Features
+
+* **app-management:** export permissions to server and add name parameter ([#270](https://github.com/appium/appium-mcp/issues/270)) ([a6d8e1e](https://github.com/appium/appium-mcp/commit/a6d8e1e95b3374cb33237168dfb2b5d761563acc))
+
+## [1.61.0](https://github.com/appium/appium-mcp/compare/v1.60.2...v1.61.0) (2026-04-21)
+
+### Features
+
+* consolidate gesture tools ([#278](https://github.com/appium/appium-mcp/issues/278)) ([17faac6](https://github.com/appium/appium-mcp/commit/17faac696cf4d096250fcc182d4d68af73ed1a92))
+
+## [1.60.2](https://github.com/appium/appium-mcp/compare/v1.60.1...v1.60.2) (2026-04-21)
+
+### Miscellaneous Chores
+
+* **docs:** remove outdated PR review checklist files ([#280](https://github.com/appium/appium-mcp/issues/280)) ([762fa05](https://github.com/appium/appium-mcp/commit/762fa056ffc31123fed180fac4d3cfe1d45f0744))
+
+## [1.60.1](https://github.com/appium/appium-mcp/compare/v1.60.0...v1.60.1) (2026-04-19)
+
+### Bug Fixes
+
+* **click:** rename default export to clickElement ([#276](https://github.com/appium/appium-mcp/issues/276)) ([65d5f52](https://github.com/appium/appium-mcp/commit/65d5f52700e84239efd38d75fd1f468c58b57569))
+
+## [1.60.0](https://github.com/appium/appium-mcp/compare/v1.59.1...v1.60.0) (2026-04-19)
+
+### Features
+
+* **tools:** complete migration of all tools to textResult/errorResult/resolveDriver ([#275](https://github.com/appium/appium-mcp/issues/275)) ([2b3c190](https://github.com/appium/appium-mcp/commit/2b3c19094e1cbafb237b5cbefa600fbf1a0dd890))
+
+## [1.59.1](https://github.com/appium/appium-mcp/compare/v1.59.0...v1.59.1) (2026-04-18)
+
+### Miscellaneous Chores
+
+* **tools:** unify tool text results and driver resolution helpers ([#263](https://github.com/appium/appium-mcp/issues/263)) ([f9084ec](https://github.com/appium/appium-mcp/commit/f9084ec82169660a6cb2a3c12e0714706b8a1c7c))
+
+## [1.59.0](https://github.com/appium/appium-mcp/compare/v1.58.0...v1.59.0) (2026-04-17)
+
+### Features
+
+* rename appium_app to appium_app_lifecycle ([#273](https://github.com/appium/appium-mcp/issues/273)) ([d524036](https://github.com/appium/appium-mcp/commit/d5240366604a988fdc56e5e1d218f71743f344de))
+
+## [1.58.0](https://github.com/appium/appium-mcp/compare/v1.57.0...v1.58.0) (2026-04-17)
+
+### Features
+
+* support remote sessions for context management and app listing ([#265](https://github.com/appium/appium-mcp/issues/265)) ([1abe075](https://github.com/appium/appium-mcp/commit/1abe07510ef7241f91a6f7a09fb06760922cd5c7))
+
+## [1.57.0](https://github.com/appium/appium-mcp/compare/v1.56.3...v1.57.0) (2026-04-16)
+
+### Features
+
+* **session:** consolidate device actions into appium_mobile_device_control ([#259](https://github.com/appium/appium-mcp/issues/259)) ([b500d0a](https://github.com/appium/appium-mcp/commit/b500d0aa5a198ffcea8c97bafcd165d09c1905d9))
+
+## [1.56.3](https://github.com/appium/appium-mcp/compare/v1.56.2...v1.56.3) (2026-04-16)
+
+### Miscellaneous Chores
+
+* remove ts jest ([#269](https://github.com/appium/appium-mcp/issues/269)) ([7f5f0ac](https://github.com/appium/appium-mcp/commit/7f5f0ac4ced328d0ad768a6829b9f62572f83567))
+
+## [1.56.2](https://github.com/appium/appium-mcp/compare/v1.56.1...v1.56.2) (2026-04-16)
+
+### Miscellaneous Chores
+
+* **deps:** bump appium-xcuitest-driver from 10.43.1 to 11.0.0 ([#266](https://github.com/appium/appium-mcp/issues/266)) ([0e6593c](https://github.com/appium/appium-mcp/commit/0e6593c3334993ab88fb617f86bf80e199d95ac0))
+
+## [1.56.1](https://github.com/appium/appium-mcp/compare/v1.56.0...v1.56.1) (2026-04-14)
+
+### Miscellaneous Chores
+
+* **deps:** bump fastmcp from 3.35.0 to 4.0.0 ([#261](https://github.com/appium/appium-mcp/issues/261)) ([6f671cc](https://github.com/appium/appium-mcp/commit/6f671cce10ac315eec2a9ffd08dfa6e2bcda172a))
+
+## [1.56.0](https://github.com/appium/appium-mcp/compare/v1.55.0...v1.56.0) (2026-04-13)
+
+### Features
+
+* **app:** consolidate app commands  ([#255](https://github.com/appium/appium-mcp/issues/255)) ([bad8cdc](https://github.com/appium/appium-mcp/commit/bad8cdc266b1646f8748bd73e5a6102689e03b7b))
+
+## [1.55.0](https://github.com/appium/appium-mcp/compare/v1.54.0...v1.55.0) (2026-04-13)
+
+### Features
+
+* consolidate geolocation functionality into a single tool ([#256](https://github.com/appium/appium-mcp/issues/256)) ([9cdedbd](https://github.com/appium/appium-mcp/commit/9cdedbd876ee70e85be17a786cb22069af65f9c0))
+
+## [1.54.0](https://github.com/appium/appium-mcp/compare/v1.53.1...v1.54.0) (2026-04-11)
+
+### Features
+
+* **device-info:** consolidate device info commands ([#257](https://github.com/appium/appium-mcp/issues/257)) ([29e2f17](https://github.com/appium/appium-mcp/commit/29e2f1713e8fbef860dfede31e05b2f013533cbb))
+
+## [1.53.1](https://github.com/appium/appium-mcp/compare/v1.53.0...v1.53.1) (2026-04-11)
+
+### Miscellaneous Chores
+
+* **deps-dev:** bump typescript from 5.9.3 to 6.0.2 ([#229](https://github.com/appium/appium-mcp/issues/229)) ([c81bcd3](https://github.com/appium/appium-mcp/commit/c81bcd384f373f0c29603b316db71e2baca743ba))
+
+## [1.53.0](https://github.com/appium/appium-mcp/compare/v1.52.0...v1.53.0) (2026-04-10)
+
+### Features
+
+* **context:** consolidate context operations into appium_context ([#258](https://github.com/appium/appium-mcp/issues/258)) ([4beb583](https://github.com/appium/appium-mcp/commit/4beb583b69f05030993902c867047c0f47a80837))
+
+## [1.52.0](https://github.com/appium/appium-mcp/compare/v1.51.0...v1.52.0) (2026-04-10)
+
+### Features
+
+* **app-management:** add mobile permission tools ([#248](https://github.com/appium/appium-mcp/issues/248)) ([d5a5b5a](https://github.com/appium/appium-mcp/commit/d5a5b5a6c2394ae49e30efb0fc4175a780257715))
+
+## [1.51.0](https://github.com/appium/appium-mcp/compare/v1.50.0...v1.51.0) (2026-04-10)
+
+### Features
+
+* consolidate `select_platform` into `select_device` ([#254](https://github.com/appium/appium-mcp/issues/254)) ([96d7303](https://github.com/appium/appium-mcp/commit/96d730302df4ad64e6e946a663416ebbdf925eb3))
+
+## [1.50.0](https://github.com/appium/appium-mcp/compare/v1.49.1...v1.50.0) (2026-04-08)
+
+### Features
+
+* **app-management:** implement app parameter for human friendly control ([#251](https://github.com/appium/appium-mcp/issues/251)) ([24ac94d](https://github.com/appium/appium-mcp/commit/24ac94d28d18f70255e8cfd053aee4627e6c2afd))
+
+## [1.49.1](https://github.com/appium/appium-mcp/compare/v1.49.0...v1.49.1) (2026-04-08)
+
+### Bug Fixes
+
+* support typings with w3c actions ([#253](https://github.com/appium/appium-mcp/issues/253)) ([9cfd464](https://github.com/appium/appium-mcp/commit/9cfd4641e7263cf3b7d1e71f3c580b1dfbd57a58))
+
+## [1.49.0](https://github.com/appium/appium-mcp/compare/v1.48.0...v1.49.0) (2026-04-08)
+
+### Features
+
+* consolidate simulator preparation into single `prepare_ios_simulator` tool ([#250](https://github.com/appium/appium-mcp/issues/250)) ([68cfc91](https://github.com/appium/appium-mcp/commit/68cfc9142857d346f3eacf36fff9ba7456724096))
+
+## [1.48.0](https://github.com/appium/appium-mcp/compare/v1.47.0...v1.48.0) (2026-04-07)
+
+### Features
+
+* merge some similar tools to reduce the amount of tools ([#249](https://github.com/appium/appium-mcp/issues/249)) ([7fa60f2](https://github.com/appium/appium-mcp/commit/7fa60f2ad74cbdfa99d9057380f32ec17716c8d0))
+
 ## [1.47.0](https://github.com/appium/appium-mcp/compare/v1.46.0...v1.47.0) (2026-04-07)
 
 ### Features

@@ -1,49 +1,48 @@
-import { FastMCP } from 'fastmcp';
-import { getDriver } from '../../session-store.js';
-import { elementUUIDScheme } from '../../schema.js';
-import type { NullableDriverInstance } from '../../session-store.js';
-import { writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import {
-  createUIResource,
-  createScreenshotViewerUI,
-  addUIResourceToResponse,
-} from '../../ui/mcp-ui-utils.js';
-import { getScreenshot } from '../../command.js';
-import z from 'zod';
-import { imageUtil } from '@appium/support';
-import { resolveScreenshotDir } from '../../utils/paths.js';
+import {join} from 'node:path';
 
-export { resolveScreenshotDir };
+import {fs, imageUtil} from '@appium/support';
+import type {ContentResult, FastMCP} from 'fastmcp';
+import z from 'zod';
+
+import {getScreenshot} from '../../command.js';
+import {SCREENSHOT_VIEWER_URI} from '../../resources/screenshot-viewer.js';
+import {elementUUIDScheme} from '../../schema.js';
+import {clientSupportsMcpApps, isMcpAppsEnabled} from '../../ui/mcp-apps.js';
+import {createUIResource, createScreenshotViewerUI, addUIResourceToResponse} from '../../ui/mcp-ui-utils.js';
+import {resolveScreenshotDir} from '../../utils/paths.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
+
+export {resolveScreenshotDir};
 
 export interface ScreenshotDeps {
-  getDriver: (sessionId?: string) => NullableDriverInstance;
-  writeFile: typeof writeFile;
-  mkdir: typeof mkdir;
+  writeFile: (filePath: string, data: Buffer) => Promise<unknown>;
+  mkdir: (dirPath: string, options?: {recursive?: boolean}) => Promise<unknown>;
   resolveScreenshotDir: typeof resolveScreenshotDir;
   dateNow: () => number;
 }
 
 const defaultDeps: ScreenshotDeps = {
-  getDriver,
-  writeFile,
-  mkdir,
+  writeFile: fs.writeFile,
+  mkdir: async (dirPath) => await fs.mkdirp(dirPath),
   resolveScreenshotDir,
   dateNow: () => Date.now(),
 };
 
 export async function executeScreenshot(opts: {
   deps?: ScreenshotDeps;
-  elementId?;
+  elementId?: string;
   maxWidth?: number;
+  returnRawBase64?: boolean;
   sessionId?: string;
-}): Promise<any> {
-  const { deps = defaultDeps, elementId, maxWidth, sessionId } = opts;
+  useMcpApps?: boolean;
+}): Promise<ContentResult> {
+  const {deps = defaultDeps, elementId, maxWidth, returnRawBase64, sessionId, useMcpApps = false} = opts;
 
-  const driver = deps.getDriver(sessionId);
-  if (!driver) {
-    throw new Error('No driver found');
+  const resolved = await resolveDriver(sessionId);
+  if (!resolved.ok) {
+    return resolved.result;
   }
+  const {driver} = resolved;
 
   try {
     const screenshotBase64 = await getScreenshot(driver, elementId);
@@ -58,13 +57,24 @@ export async function executeScreenshot(opts: {
       const sharp = imageUtil.requireSharp();
       const metadata = await sharp(originalBuffer).metadata();
       if (metadata.width !== undefined && metadata.width > maxWidth) {
-        const resizedBuffer = await sharp(originalBuffer)
-          .resize({ width: maxWidth })
-          .png()
-          .toBuffer();
+        const resizedBuffer = await sharp(originalBuffer).resize({width: maxWidth}).png().toBuffer();
         screenshotBuffer = Buffer.from(resizedBuffer);
         displayBase64 = screenshotBuffer.toString('base64');
       }
+    }
+
+    // Return the raw base64 image without touching the disk. Useful when the
+    // server runs on a remote machine where the saved file is not reachable.
+    if (returnRawBase64) {
+      return {
+        content: [
+          {
+            type: 'image',
+            data: displayBase64,
+            mimeType: 'image/png',
+          },
+        ],
+      };
     }
 
     // Generate filename with timestamp
@@ -73,95 +83,87 @@ export async function executeScreenshot(opts: {
     const screenshotDir = deps.resolveScreenshotDir();
 
     // Create a directory if it doesn't exist
-    await deps.mkdir(screenshotDir, { recursive: true });
+    await deps.mkdir(screenshotDir, {recursive: true});
 
     const filepath = join(screenshotDir, filename);
 
     // Save screenshot to disk
     await deps.writeFile(filepath, screenshotBuffer);
 
-    const textResponse = {
-      content: [
-        {
-          type: 'text',
-          text: `Screenshot saved successfully to: ${filepath}`,
+    const textResponse = textResult(`Screenshot saved successfully to: ${filepath}`);
+
+    // MCP Apps-capable clients receive the image through structuredContent.
+    // It remains available to the viewer without adding base64 data to model
+    // context or duplicating it inside generated HTML.
+    if (useMcpApps) {
+      return {
+        ...textResponse,
+        structuredContent: {
+          screenshot: {
+            data: displayBase64,
+            mimeType: 'image/png',
+            filepath,
+          },
         },
-      ],
-    };
+      };
+    }
 
     // Add interactive screenshot viewer UI
-    const uiResource = createUIResource(
-      `ui://appium-mcp/screenshot-viewer/${Date.now()}`,
-      createScreenshotViewerUI(displayBase64, filepath)
+    return addUIResourceToResponse(textResponse, () =>
+      createUIResource(
+        `ui://appium-mcp/screenshot-viewer/${Date.now()}`,
+        createScreenshotViewerUI(displayBase64, filepath),
+      ),
     );
-
-    return addUIResourceToResponse(textResponse, uiResource);
-  } catch (err: any) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Failed to take screenshot. err: ${err.toString()}`,
-        },
-      ],
-    };
+  } catch (err: unknown) {
+    return errorResult(`Failed to take screenshot. err: ${toolErrorMessage(err)}`);
   }
 }
 
-const maxWidthSchema = z
-  .number()
-  .optional()
-  .describe(
-    'Optional maximum width in pixels to resize the screenshot. The aspect ratio is preserved. Useful for reducing token usage when sending screenshots to LLMs.'
-  );
+const screenshotSchema = z.object({
+  elementUUID: elementUUIDScheme
+    .optional()
+    .describe('Optional element UUID. If provided, captures only this element. If omitted, captures full screen.'),
+  maxWidth: z
+    .number()
+    .optional()
+    .describe(
+      'Optional maximum width in pixels to resize the screenshot. The aspect ratio is preserved. Useful for reducing token usage when sending screenshots to LLMs.',
+    ),
+  returnRawBase64: z
+    .boolean()
+    .default(false)
+    .describe(
+      'When true, returns the raw base64-encoded PNG image instead of saving it to disk. ' +
+        'This should only be enabled when a human explicitly invokes the tool manually, ' +
+        'typically to view the screenshot on a different machine (e.g. when the server runs ' +
+        'on a remote machine and the saved file is not accessible). ' +
+        'An LLM must always keep this false and rely on the saved file path.',
+    ),
+  sessionId: z.string().optional().describe('Session ID to target. If omitted, uses the active session.'),
+});
 
-export function screenshot(server: FastMCP): void {
-  const screenshotSchema = z.object({
-    maxWidth: maxWidthSchema,
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
-  });
-
+export default function screenshot(server: FastMCP): void {
+  const mcpAppsEnabled = isMcpAppsEnabled();
   server.addTool({
     name: 'appium_screenshot',
-    description:
-      'Take a screenshot of the current screen and return as PNG image',
+    description: 'Take a screenshot and save as PNG. Optionally provide elementUUID to capture only that element.',
+    _meta: mcpAppsEnabled ? {ui: {resourceUri: SCREENSHOT_VIEWER_URI}} : undefined,
     parameters: screenshotSchema,
     annotations: {
       readOnlyHint: false,
       openWorldHint: false,
     },
-    execute: async (args: any, _context: any): Promise<any> =>
-      executeScreenshot({ maxWidth: args.maxWidth, sessionId: args.sessionId }),
-  });
-}
-
-export function elementScreenshot(server: FastMCP): void {
-  const elementScreenshotSchema = z.object({
-    elementUUID: elementUUIDScheme,
-    maxWidth: maxWidthSchema,
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
-  });
-
-  server.addTool({
-    name: 'appium_element_screenshot',
-    description:
-      'Take a screenshot of the given element uuid and return as PNG image',
-    parameters: elementScreenshotSchema,
-    annotations: {
-      readOnlyHint: false,
-      openWorldHint: false,
-    },
-    execute: async (args: any, _context: any): Promise<any> =>
+    execute: async (
+      args: z.infer<typeof screenshotSchema>,
+      context: Record<string, unknown> | undefined,
+    ): Promise<ContentResult> =>
       executeScreenshot({
         elementId: args.elementUUID,
         maxWidth: args.maxWidth,
+        returnRawBase64: args.returnRawBase64,
         sessionId: args.sessionId,
+        useMcpApps: mcpAppsEnabled && clientSupportsMcpApps(server, context),
       }),
   });
 }

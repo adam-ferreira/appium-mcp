@@ -1,23 +1,21 @@
-import type { ContentResult, FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { getDriver } from '../../session-store.js';
-import {
-  createUIResource,
-  createPageSourceInspectorUI,
-  addUIResourceToResponse,
-} from '../../ui/mcp-ui-utils.js';
-import { getPageSource as _getPageSource } from '../../command.js';
+import type {ContentResult, FastMCP} from 'fastmcp';
+import {z} from 'zod';
+
+import {getPageSource as _getPageSource} from '../../command.js';
+import {PAGE_SOURCE_INSPECTOR_URI} from '../../resources/page-source-inspector.js';
+import {clientSupportsMcpApps, isMcpAppsEnabled} from '../../ui/mcp-apps.js';
+import {createUIResource, createPageSourceInspectorUI, addUIResourceToResponse} from '../../ui/mcp-ui-utils.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
 
 export default function getPageSource(server: FastMCP): void {
+  const mcpAppsEnabled = isMcpAppsEnabled();
   const pageSourceSchema = z.object({
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
+    sessionId: z.string().optional().describe('Session ID to target. If omitted, uses the active session.'),
   });
   server.addTool({
     name: 'appium_get_page_source',
     description: 'Get the page source (XML) from the current screen',
+    _meta: mcpAppsEnabled ? {ui: {resourceUri: PAGE_SOURCE_INSPECTOR_URI}} : undefined,
     parameters: pageSourceSchema,
     annotations: {
       readOnlyHint: true,
@@ -25,49 +23,34 @@ export default function getPageSource(server: FastMCP): void {
     },
     execute: async (
       args: z.infer<typeof pageSourceSchema>,
-      _context: Record<string, unknown> | undefined
+      context: Record<string, unknown> | undefined,
     ): Promise<ContentResult> => {
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found. Please create a session first.');
+      const resolved = await resolveDriver(args.sessionId);
+      if (!resolved.ok) {
+        return resolved.result;
       }
+      const {driver} = resolved;
 
       try {
         const pageSource = await _getPageSource(driver);
         if (!pageSource) {
-          throw new Error('Page source is empty or null');
+          return errorResult('Page source is empty or null');
         }
 
-        const textResponse = {
-          content: [
-            {
-              type: 'text',
-              text:
-                'Page source retrieved successfully: \n' +
-                '```xml ' +
-                pageSource +
-                '```',
-            },
-          ],
-        };
+        const textResponse = textResult('Page source retrieved successfully: \n' + '```xml ' + pageSource + '```');
+
+        // MCP Apps-capable clients fetch the static inspector once and pass
+        // this existing text result to it, avoiding a second copy of the XML.
+        if (mcpAppsEnabled && clientSupportsMcpApps(server, context)) {
+          return textResponse;
+        }
 
         // Add interactive page source inspector UI
-        const uiResource = createUIResource(
-          `ui://appium-mcp/page-source-inspector/${Date.now()}`,
-          createPageSourceInspectorUI(pageSource)
+        return addUIResourceToResponse(textResponse, () =>
+          createUIResource(`${PAGE_SOURCE_INSPECTOR_URI}/${Date.now()}`, createPageSourceInspectorUI(pageSource)),
         );
-
-        return addUIResourceToResponse(textResponse, uiResource);
-      } catch (err: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to get page source. Error: ${err.toString()}`,
-            },
-          ],
-          isError: true,
-        };
+      } catch (err: unknown) {
+        return errorResult(`Failed to get page source. Error: ${toolErrorMessage(err)}`);
       }
     },
   });

@@ -6,22 +6,20 @@ This directory contains all MCP tools available in MCP Appium.
 
 ### Session Management (`session/`)
 
-- `create-session.ts` - Create mobile automation sessions
-- `delete-session.ts` - Clean up sessions
-- `open-notifications.ts` - Open notifications panel (Android only)
-- `shake.ts` - iOS Simulator shake via `mobile: shake` (`appium_mobile_shake`; not Android, not physical iOS)
-- `lock.ts` - Lock device (`appium_mobile_lock`); optionally lock for N seconds (Android & iOS)
-- `lock.ts` - Unlock device (`appium_mobile_unlock`)
-- `select-platform.ts` - Choose Android or iOS
-- `select-device.ts` - Choose specific device
-- `file-transfer.ts` - Push/pull files on device (`appium_mobile_push_file`, `appium_mobile_pull_file`)
-- `driver-settings.ts` - Read/update Appium driver session settings (`appium_get_settings`, `appium_update_settings`)
+- `session.ts` - Unified session tool (`appium_session_management`; `action=create|delete|list|select`)
+  - `create-session.ts` - Capability builders and `createSessionAction` (used by `session.ts`)
+  - `delete-session.ts` - `deleteSessionAction` (used by `session.ts`)
+  - `list-sessions.ts` - `listSessionsAction` (used by `session.ts`)
+  - `select-session.ts` - `selectSessionAction` (used by `session.ts`)
+- `select-device.ts` - Discover devices and select one (auto-selects if only one found)
+- `device-control.ts` - Device controls in one tool (`appium_mobile_device_control`; `action=lock|unlock|shake|open_notifications`)
+- `file-transfer.ts` - Push/pull files on device (`appium_mobile_file` with `action=push|pull`)
+- `driver-settings.ts` - Read/update Appium driver session settings (`appium_driver_settings`, `action`: `get` \| `update`)
 
 ### iOS Setup (`ios/`)
 
-- `boot-simulator.ts` - Boot iOS simulators
-- `setup-wda.ts` - Setup WebDriverAgent
-- `install-wda.ts` - Install WebDriverAgent
+- `prepare-ios-simulator.ts` - Boot simulator, download, install and launch WebDriverAgent in a single call
+- `prepare-ios-real-device.ts` - Download the matching WDA release and resign it with a local provisioning profile. Discovery mode (no UUID) lists available `.mobileprovision` profiles (including wildcard ones, flagged as `recommendedForWda`); build mode (UUID) runs the signing pipeline. WDA download and unsigned IPA are cached per WDA version; the signed IPA is rebuilt every call so profile/cert rotation never serves a stale signature. Returns `usePreinstalledWDA` + `prebuiltWDAPath` capabilities so Appium installs and launches WDA during session startup.
 
 ### Navigation (`navigations/`)
 
@@ -38,7 +36,7 @@ This directory contains all MCP tools available in MCP Appium.
 - `drag-and-drop.ts` - Drag and drop elements or coordinates
 - `press-key.ts` - Press navigation keys or physical buttons
 - `set-value.ts` - Enter text
-- `keyboard.ts` - Soft keyboard: `appium_mobile_hide_keyboard` / `appium_mobile_is_keyboard_shown`
+- `keyboard.ts` - Soft keyboard (`appium_mobile_keyboard`; `action=hide` \| `is_shown`)
 - `get-text.ts` - Get element text
 - `get-page-source.ts` - Get page source (XML) from current screen
 - `screenshot.ts` - Capture screenshots
@@ -53,7 +51,8 @@ When searching for elements, follow this priority order for efficiency:
    - Best for: Finding what element currently has focus
 
 2. **`appium_find_element`** (PRIORITY 2) - Use this to search for a specific target element
-   - Specify strategy (xpath, id, accessibility id, etc.) and selector
+   - Specify strategy and selector
+   - Strategy priority: `accessibility id` > `id` > platform-native (`-ios predicate string` / `-ios class chain` on iOS, `-android uiautomator` on Android) > `xpath` (last resort)
    - Returns specific element UUID
    - Best for: Targeting a known element
 
@@ -71,7 +70,12 @@ When searching for elements, follow this priority order for efficiency:
 - `install-app.ts` - Install apps
 - `uninstall-app.ts` - Uninstall apps
 - `clear-app.ts` - Clear app data / cache without uninstall (`appium_mobile_clear_app`; iOS Simulator only, Android broadly)
+- `permissions.ts` - Unified mobile permissions (`appium_mobile_permissions`; action get / update / reset, platform-specific fields)
 - `list-apps.ts` - List installed apps
+
+### Context Management (`context/`)
+
+- `context.ts` - Unified context operations (`appium_context`; `action=list|switch`)
 
 ### Test Generation (`test-generation/`)
 

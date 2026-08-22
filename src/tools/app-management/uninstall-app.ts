@@ -1,60 +1,28 @@
-import { FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { getDriver, getPlatformName, PLATFORM } from '../../session-store.js';
-import { execute } from '../../command.js';
+import type {ContentResult} from 'fastmcp';
 
-export default function uninstallApp(server: FastMCP): void {
-  const schema = z.object({
-    id: z
-      .string()
-      .describe('App identifier (package name for Android, bundle ID for iOS)'),
-    sessionId: z
-      .string()
-      .optional()
-      .describe('Session ID to target. If omitted, uses the active session.'),
-    keepData: z
-      .boolean()
-      .optional()
-      .describe(
-        'Keep the application data and cache folders after uninstall. Android only.'
-      ),
-  });
+import {execute} from '../../command.js';
+import {getPlatformName, PLATFORM} from '../../session-store.js';
+import {resolveDriver, textResult, errorResult, toolErrorMessage} from '../tool-response.js';
+import {invalidateAppListCache} from './resolve-app-id.js';
 
-  server.addTool({
-    name: 'appium_uninstall_app',
-    description: 'Uninstall an app from the device.',
-    parameters: schema,
-    execute: async (args: z.infer<typeof schema>) => {
-      const { id, keepData } = args;
-      const driver = getDriver(args.sessionId);
-      if (!driver) {
-        throw new Error('No driver found');
-      }
-      try {
-        const platform = getPlatformName(driver);
-        const params =
-          platform === PLATFORM.android
-            ? { appId: id, keepData: keepData ?? false }
-            : { bundleId: id };
-        await execute(driver, 'mobile: removeApp', params);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'App uninstalled successfully',
-            },
-          ],
-        };
-      } catch (err: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Failed to uninstall app. err: ${err.toString()}`,
-            },
-          ],
-        };
-      }
-    },
-  });
+export async function uninstall(id: string, keepData?: boolean, sessionId?: string): Promise<ContentResult> {
+  const resolved = await resolveDriver(sessionId);
+  if (!resolved.ok) {
+    return resolved.result;
+  }
+  const {driver} = resolved;
+
+  try {
+    const platform = getPlatformName(driver);
+    const params = platform === PLATFORM.android ? {appId: id, keepData: keepData ?? false} : {bundleId: id};
+    const removed = await execute(driver, 'mobile: removeApp', params);
+    if (removed) {
+      invalidateAppListCache(sessionId);
+    }
+    return textResult(
+      removed ? 'App uninstalled successfully' : `App "${id}" was not installed, nothing to uninstall.`,
+    );
+  } catch (err: unknown) {
+    return errorResult(`Failed to uninstall app. err: ${toolErrorMessage(err)}`);
+  }
 }
