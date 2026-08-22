@@ -2,15 +2,22 @@ import type { ContentResult, FastMCP } from 'fastmcp';
 import { z } from 'zod';
 import { getDriver, getPlatformName, PLATFORM } from '../../session-store.js';
 import { execute } from '../../command.js';
-import { BatteryState } from 'appium-xcuitest-driver/build/lib/commands/enum.js';
 
-// iOS: maps UIDeviceBatteryState values to human-readable strings
-// @see https://github.com/appium/appium-xcuitest-driver/blob/5bdad71/lib/commands/enum.ts#L91
+// iOS: maps UIDeviceBatteryState values to human-readable strings.
+//
+// These four integers are Apple's, not Appium's: UIKit's `UIDeviceBatteryState`,
+// unchanged since iOS 3.0. We used to import them from
+// appium-xcuitest-driver/build/lib/commands/enum.js, but v12 added an `exports`
+// field that closes every deep subpath, so that import no longer resolves.
+// Reaching into a driver's internals for four stable constants was the fragile
+// part — declaring them here removes the coupling entirely.
+//
+// @see https://developer.apple.com/documentation/uikit/uidevice/batterystate-swift.enum
 const IOS_BATTERY_STATES: Record<number, string> = {
-  [BatteryState.UIDeviceBatteryStateUnknown]: 'unknown', // UIDeviceBatteryStateUnknown
-  [BatteryState.UIDeviceBatteryStateUnplugged]: 'unplugged', // UIDeviceBatteryStateUnplugged
-  [BatteryState.UIDeviceBatteryStateCharging]: 'charging', // UIDeviceBatteryStateCharging
-  [BatteryState.UIDeviceBatteryStateFull]: 'full', // UIDeviceBatteryStateFull
+  0: 'unknown', // UIDeviceBatteryStateUnknown
+  1: 'unplugged', // UIDeviceBatteryStateUnplugged
+  2: 'charging', // UIDeviceBatteryStateCharging
+  3: 'full', // UIDeviceBatteryStateFull
 };
 
 // Android: state matches BatteryManager constants
