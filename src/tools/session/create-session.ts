@@ -164,14 +164,33 @@ export async function buildIOSCapabilities(
       ? selectedDeviceInfo.platform
       : undefined;
 
-  const additionalCaps =
-    deviceType === 'simulator'
-      ? {
-          'appium:usePrebuiltWDA': true,
-          'appium:wdaStartupRetries': 4,
-          'appium:wdaStartupRetryInterval': 20000,
-        }
-      : {};
+  let additionalCaps: Record<string, any> = {};
+  if (deviceType === 'simulator') {
+    additionalCaps = {
+      'appium:usePrebuiltWDA': true,
+      'appium:wdaStartupRetries': 4,
+      'appium:wdaStartupRetryInterval': 20000,
+    };
+  } else if (deviceType === 'real') {
+    // For real devices: auto-detect running WDA if no explicit URL is set
+    const hasExplicitWdaUrl =
+      configCaps['appium:webDriverAgentUrl'] ||
+      customCaps?.['appium:webDriverAgentUrl'];
+
+    if (!hasExplicitWdaUrl) {
+      const { probeWdaStatus } = await import('../../utils/wda-health.js');
+      const wdaUrl = 'http://localhost:8100';
+      const probe = await probeWdaStatus(wdaUrl);
+      if (probe.alive) {
+        log.info(`Auto-detected running WDA at ${wdaUrl}`);
+        additionalCaps['appium:webDriverAgentUrl'] = wdaUrl;
+      }
+    }
+
+    additionalCaps['appium:wdaStartupRetries'] = 4;
+    additionalCaps['appium:wdaStartupRetryInterval'] = 20000;
+    additionalCaps['appium:useNewWDA'] = false;
+  }
   additionalCaps['appium:newCommandTimeout'] = 300;
   additionalCaps['appium:settings[animationCoolOffTimeout]'] = 0.5;
   additionalCaps['appium:settings[maxTypingFrequency]'] = 45;
